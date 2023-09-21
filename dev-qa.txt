@@ -1,0 +1,3 @@
+s3://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open
+
+s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open

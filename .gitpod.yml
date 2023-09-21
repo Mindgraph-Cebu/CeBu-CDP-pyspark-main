@@ -1,0 +1,10 @@
+vscode:
+  extensions:
+    - github.copilot
+    - ms-python.python
+    - ms-toolsai.jupyter
+tasks:
+- before: pip3 install -r requirements.txt 
+  init: echo "Download done"
+  # ; rm -f cs 
+  command: echo "Hey"

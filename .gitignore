@@ -1,0 +1,11 @@
+
+/.vscode
+/ccai/ccai/__pycache__
+/ccai/ccai/profiles/__pycache__
+/ccai/ccai/dedupe/__pycache__
+ccai/poetry.lock
+ccai/ccai/license/__pycache__
+ccai/dist
+ccai_cdp_env/
+*.pyc
+ccai/venv*/

@@ -1,0 +1,13 @@
+ceja==0.4.0
+ibis-framework[duckdb]
+pandas
+pyspark
+boto3
+pyarrow
+poetry
+abydos
+unidecode
+networkx
+streamlit
+textdistance
+recordlinkage
