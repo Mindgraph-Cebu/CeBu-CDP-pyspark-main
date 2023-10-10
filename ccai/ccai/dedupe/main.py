@@ -19,7 +19,7 @@ import ibis
 import random
 import string
 from pyspark.sql.functions import udf
-
+from datetime import datetime as dt
 
 def get_config(file_path):
     # file_path = "s3a://cebu-cdp-data-qa/script/glue/cebu-cdp-profile-glue/profile_config_cebu_v1.json"
@@ -46,8 +46,27 @@ def reverseFillNa(config, profile_df, spark):
 
     return profile_df
 
+class DriverLogs:
+    def __init__(self, log_text = "Dedupe Starts!"):
+        self.checkpoint_count = 1
+        self.log_list = list()
+        self.log_list.append("{} : Checkpoint-{:03d} -> {}".format(dt.now(),self.checkpoint_count, log_text))
+    
+    def log(self, log_text=''):
+        self.checkpoint_count+=1
+        self.log_list.append("{} : Checkpoint-{:03d} -> {}".format(dt.now(),self.checkpoint_count, log_text))
+
+    def print_logs(self):
+        print("*"*100)
+        print("Driver Logs: ")
+        print("\n".join(self.log_list))
+
+    def return_logs(self):
+        return """\n{}\n{}\n{}\n{}""".format("*"*100, "Driver Logs: ", "\n".join(self.log_list), "*"*100)
+
 
 def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph):
+    driver_log = DriverLogs()
     config = get_config(config_path)
     spark.conf.set("spark.sql.mapKeyDedupPolicy", "LAST_WIN")
     # spark.conf.set("spark.sql.shuffle.partitions", "400")
@@ -137,7 +156,7 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
     df = df.withColumn(
         "FilterLastName",
         F.lower(F.regexp_replace(F.col("LastName"), "[^a-zA-Z0-9]", "")),
-    )
+    ).cache()
 
     firstname_filters = [
         "tba",
@@ -173,13 +192,18 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
         "ceb",
         "lastname",
     ]
+
+    driver_log.log("Initial number of Rows = {}".format(df.count()))
     df = df.filter(
         ~F.col("FilterFirstName").isin(*firstname_filters)
         & ~F.col("FilterLastName").isin(*lastname_filters)
     )
+    driver_log.log("Number of Rows after filtering firstname and lastname = {}".format(df.count()))
 
     df = df.drop(*("FilterFirstName", "FilterLastName"))
     df = df.filter(F.col("PassengerID").isNotNull())
+
+    driver_log.log("Number of Rows after removing null passengerId = {}".format(df.count()))
 
     def pcolumn_hashing(pFirstName, pLastName):
         return hashlib.md5(
@@ -263,8 +287,10 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
             F.col("ProvisionalPrimaryKey")
         ),
     )
+    df_count = df.count()
+    LOGGER.info("ccai dob cluster final length: {}".format(df_count))
+    driver_log.log("ccai dob cluster final length = {}".format(df_count))
 
-    LOGGER.info("ccai dob cluster final length: {}".format(df.count()))
 
     @udf()
     def generate_random_string():
@@ -295,10 +321,13 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
     df = df.withColumn(
         "firstname",
         F.regexp_replace(F.col("FirstName"), "^(jr|jr.)", " junior alias son of $1"),
-    )
+    ).cache()
 
+    df_count = df.count()
+    driver_log.log("Row Count at next Checkpoint = {}".format(df_count))
     print("start ", df.count())
-
+    driver_log.log("Row Count - Null DOB Rows = {}".format(df.filter("dateofbirth = 'CCAI_NULL'").count()))
+    
     df.createOrReplaceTempView("df_dedupe")
     print(
         "num of dob nulls ",
@@ -306,7 +335,7 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
             "select count(*) as cnt from df_dedupe where dateofbirth = 'CCAI_NULL'"
         ).show(),
     )
-    df.createOrReplaceTempView("df_dedupe")
+    # df.createOrReplaceTempView("df_dedupe")
     df = spark.sql(
         """
     select firstname, lastname, passengerid, pfirstname,plastname, provisionalprimarykey, group_hash,
@@ -349,9 +378,11 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
     drop_nulls = """
     select * from df_dedupe where dateofbirth is not NULL
     """
-    df.createOrReplaceTempView("df_dedupe")
-    df = spark.sql(drop_nulls)
-    print("dropping unresolved dob nulls ", df.count())
+    # df.createOrReplaceTempView("df_dedupe")
+    df = spark.sql(drop_nulls).cache()
+    df_count=df.count()
+    print("dropping unresolved dob nulls ", df_count)
+    driver_log.log("dropping unresolved dob nulls = {}".format(df_count))
 
     groupby = """
     SELECT
@@ -373,7 +404,9 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
     """
     df.createOrReplaceTempView("df_dedupe")
     df = spark.sql(groupby)
-    print("groupby to reduce exact duplicates ", df.count())
+    df_count=df.count()
+    driver_log.log("dropping unresolved dob nulls = {}".format(df_count))
+    print("groupby to reduce exact duplicates ", df_count)
 
     crossjoin = """
     select t1.*,
@@ -387,8 +420,10 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
     from df_dedupe as t1 left join df_dedupe as t2 on t1.dateofbirth == t2.dateofbirth and t1.passengerid != t2.passengerid and t1.pfirstname == t2.pfirstname and t1.plastname == t2.plastname
     """
     df.createOrReplaceTempView("df_dedupe")
-    df = spark.sql(crossjoin)
-    print("cross join ", df.count())
+    df = spark.sql(crossjoin).cache()
+    df_count=df.count()
+    driver_log.log("Num Rows After Cross Join = {}".format(df_count))
+    print("cross join ", df_count)
     # df.show()
 
     import ceja
@@ -419,7 +454,9 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
             F.concat(F.col("passengerid_list"), F.col("passengerid_list_right")),
         ).otherwise(F.col("passengerid_list")),
     )
-    print("condition based concat ", df.count())
+    df_count=df.count()
+    driver_log.log("condition based concat = {}".format(df_count))
+    print("condition based concat ", df_count)
 
     def cc_nx_udf(df: pd.DataFrame) -> pd.DataFrame:
         group_hash = df["group_hash"].iloc[0]
@@ -474,13 +511,19 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
     )
     df = df.groupby(["pfirstname", "plastname"]).applyInPandas(
         cc_nx_udf, schema=ccSchema
-    )
-    print("final count ", df.count())
+    ).cache()
+    df_count=df.count()
+    driver_log.log("Final Count = {}".format(df_count))
+    print("final count ", df_count)
 
     # df.write.mode("overwrite").parquet("s3a://cebu-cdp-data-dev/dedupe-cluster-1")
-    LOGGER.info("ccai write: {}".format(df.count()))
+    LOGGER.info("ccai write: {}".format(df_count))
     save_path = config["storageDetails"][1]["pathUrl"]
+    driver_log.log("Save Path = {}".format(save_path))
+
     # df.drop("pFirstName", "pLastName").write.mode("overwrite").parquet(save_path)
     df.write.mode("overwrite").parquet(save_path)
+    driver_log.print_logs()
+    LOGGER.info(driver_log.return_logs())
     # df.write.mode("overwrite").parquet("s3a://cebu-cdp-data-dev/dedupe-cluster-1")
     return save_path
