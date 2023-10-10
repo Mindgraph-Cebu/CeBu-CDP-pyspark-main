@@ -61,6 +61,9 @@ class DriverLogs:
         print("Driver Logs: ")
         print("\n".join(self.log_list))
 
+    def return_logs(self):
+        return """\n{}\n{}\n{}\n{}""".format("*"*100, "Driver Logs: ", "\n".join(self.log_list), "*"*100)
+
 
 def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph):
     driver_log = DriverLogs()
@@ -521,5 +524,6 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
     # df.drop("pFirstName", "pLastName").write.mode("overwrite").parquet(save_path)
     df.write.mode("overwrite").parquet(save_path)
     driver_log.print_logs()
+    LOGGER.info(driver_log.return_logs())
     # df.write.mode("overwrite").parquet("s3a://cebu-cdp-data-dev/dedupe-cluster-1")
     return save_path
