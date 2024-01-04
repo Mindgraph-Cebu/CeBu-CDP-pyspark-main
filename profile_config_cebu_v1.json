@@ -9,7 +9,7 @@
             "isFact": "true",
             "isMandatory": "true",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_bookingpassenger",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_bookingpassenger",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -31,7 +31,7 @@
             "isFact": "false",
             "isMandatory": "true",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_booking",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_booking",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -53,7 +53,7 @@
             "isFact": "false",
             "isMandatory": "false",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_bookingcontact",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_bookingcontact",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -75,7 +75,7 @@
             "isFact": "false",
             "isMandatory": "false",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_passengeraddress",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_passengeraddress",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -97,7 +97,7 @@
             "isFact": "false",
             "isMandatory": "false",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_passengertraveldoc",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_passengertraveldoc",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -119,7 +119,7 @@
             "isFact": "false",
             "isMandatory": "false",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_passengerjourneysegment",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_passengerjourneysegment",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -141,7 +141,7 @@
             "isFact": "false",
             "isMandatory": "false",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_passengerjourneyleg",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_passengerjourneyleg",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -163,7 +163,7 @@
             "isFact": "false",
             "isMandatory": "false",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_passengerfee",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_passengerfee",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -185,7 +185,7 @@
             "isFact": "false",
             "isMandatory": "true",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_agent",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_agent",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -207,7 +207,7 @@
             "isFact": "false",
             "isMandatory": "true",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_person",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_person",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -229,7 +229,7 @@
             "isFact": "false",
             "isMandatory": "false",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_personname",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_personname",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -251,7 +251,7 @@
             "isFact": "false",
             "isMandatory": "false",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_personemail",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_personemail",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -273,7 +273,7 @@
             "isFact": "false",
             "isMandatory": "false",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_personphone",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_personphone",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -295,7 +295,7 @@
             "isFact": "false",
             "isMandatory": "false",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_personaddress",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_personaddress",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -317,7 +317,7 @@
             "isFact": "false",
             "isMandatory": "false",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_traveldoc",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_traveldoc",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -339,7 +339,7 @@
             "isFact": "false",
             "isMandatory": "false",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_fee",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_fee",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -361,7 +361,7 @@
             "isFact": "false",
             "isMandatory": "false",
             "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_payment",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_payment",
             "partitionDetails": {
                 "partitionColumn": [
                     "ods"
@@ -374,6 +374,7 @@
             },
             "joinColumn": "BookingID"
         }
+        
         
 
     ],
@@ -3237,6 +3238,6 @@
             "storageHandler": "PersistHadoopFS"
         }
     ],
-    "ciamPath": "s3a://edw-dl-process-data-dev/data/ciam/hdata/ciam_all_diffen_open/ciam_all_edwcustomer",
-    "voucherPath":"s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_voucher"
+    "ciamPath": "s3a://edw-dl-process-data-dev/data/ciam/hdata/ciam_all_diffen_nonopen/ciam_all_edwcustomer",
+    "voucherPath":"s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_voucher"
 }

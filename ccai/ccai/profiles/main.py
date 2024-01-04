@@ -9,7 +9,8 @@ import pyspark.pandas as ps
 import random
 import numpy as np
 import datetime
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col,expr,when
+
 
 
 def spark_conf(spark):
@@ -92,34 +93,148 @@ def get_columns_list(config):
     # apply distinct on each list
     for eachColumnList in column_list:
         column_list[eachColumnList] = list(set(column_list[eachColumnList]))
+    column_list["all_booking"].append("RecordLocator")
+    column_list["all_booking"].append("Status")
+    column_list["all_payment"].append("AuthorizationStatus")
     return column_list
 
 
-def load_data(config, partition_date, spark, LOGGER):
+def list_folders_in_path(bucket_name, prefix,LOGGER,start_date,end_date):
+    s3 = boto3.client('s3')
+    available_folders = []
+
+    response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix, Delimiter='/')
+
+
+
+    for common_prefix in response.get('CommonPrefixes', []):
+        folder_name = common_prefix.get('Prefix', '').rstrip('/')
+        available_folders.append(folder_name)
+
+    # LOGGER.info(f"Available folders: {available_folders}")
+
+    available_partitions = []
+
+    for partition in available_folders:
+            if available_folders:
+                split_partition = partition.split("=")
+                available_date = split_partition[1]
+                if start_date <= available_date <= end_date:
+                    available_partitions.append(available_date)
+
+    return available_partitions
+
+
+def getpaths(available_partitions,entityName,path_url):
+    path = "/".join(path_url.split("/")[:7]) + "/" + path_url.split("/")[4] + "_" + entityName + "/nds="
+    partition_paths = []
+            
+    for date in available_partitions:
+        available_path = path + date + "/"
+        partition_paths.append(available_path)
+
+    return partition_paths
+
+
+def get_bucket(config,entityName):
+
+    """
+    Returns like this
+    bucket - edw-dl-process-data-dev
+    prefix - data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_bookingpassenger/
+    
+    """
+
+    path = config["entityDetails"][0]["pathUrl"]
+    bucket = path.split("/")[2]
+    prefix = '/'.join(path.split("/")[3:-1])+"/"+ path.split("/")[4] + "_" + entityName + "/"
+    return bucket,prefix
+
+
+# def load_data(config, partition_date, spark, LOGGER):
+#     column_list = get_columns_list(config)
+#     source_dict = {}
+#     for each_source in config['entityDetails']:
+#         if each_source['entityType'] == 'snapshot':
+#             # get latest partition
+#             latest_partition = get_latest_partition(
+#                 each_source['pathUrl'], each_source['partitionDetails']['partitionColumn'][0], partition_date)
+#             required_partition = "{{{},2023-07-31}}".format(latest_partition) #"ods={2023-03-21,}"
+#             # read orc data using spark
+#             source_dict[each_source['entityName']] = spark.read.load(
+#                 each_source['pathUrl'] + "/" + latest_partition, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+#             record_count = source_dict[each_source['entityName']].count()
+#             if record_count==0:
+#                 LOGGER.info("ccai -> Record count 0 for " + str(each_source['entityName']))
+#                 source_dict[each_source['entityName']] = spark.read.load(
+#                     each_source['pathUrl'] + "/" + "ods=2023-07-31", format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+#                 record_count = source_dict[each_source['entityName']].count()
+#             LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
+#     source_dict = filter_tables(config, source_dict, LOGGER)
+#     all_fee_debug = source_dict['all_fee'].limit(10).toPandas().to_csv(index=False)
+#     LOGGER.info("ccai -> all fee data\n\n"+all_fee_debug)
+#     # import sys
+#     # sys.exit("ccai Exit -> all fee data")
+#     return source_dict
+
+
+
+def load_data(config, start_date,end_date,spark,LOGGER,partition_date,archive_date):
+
+    """
+    Archive , non open and a business date is been loaded 
+    Date's -
+                Archive data date = 2021-01-01
+                Business Date(ex) = 2023-07-31
+                Non Open = From 2021-01-01 to 2023-07-31
+
+    """
+
     column_list = get_columns_list(config)
     source_dict = {}
+    partition_dict = {}
     for each_source in config['entityDetails']:
         if each_source['entityType'] == 'snapshot':
-            # get latest partition
-            latest_partition = get_latest_partition(
-                each_source['pathUrl'], each_source['partitionDetails']['partitionColumn'][0], partition_date)
-            required_partition = "{{{},2023-07-31}}".format(latest_partition) #"ods={2023-03-21,}"
-            # read orc data using spark
-            source_dict[each_source['entityName']] = spark.read.load(
-                each_source['pathUrl'] + "/" + latest_partition, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-            record_count = source_dict[each_source['entityName']].count()
-            if record_count==0:
-                LOGGER.info("ccai -> Record count 0 for " + str(each_source['entityName']))
+            
+            #load open partitions - archive and a business date
+            open_dates = [partition_date,archive_date]
+
+            open_paths = []
+            for date in open_dates:
+                path = each_source['pathUrl'].replace("nonopen","open") + "/ods=" + date + "/"
+                open_paths.append(path)
+
+            try:
+                #try loading both partitions
                 source_dict[each_source['entityName']] = spark.read.load(
-                    each_source['pathUrl'] + "/" + "ods=2023-07-31", format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-                record_count = source_dict[each_source['entityName']].count()
+                    open_paths, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+            except:
+                #try loading business date partition
+                source_dict[each_source['entityName']] = spark.read.load(
+                    open_paths[0], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+                
+        
+            #get available non open partitions
+            bucket,prefix = get_bucket(config,each_source['entityName'])
+            available_partitions = list_folders_in_path(bucket, prefix,LOGGER,start_date,end_date)
+            partition_paths = getpaths(available_partitions,each_source['entityName'],each_source['pathUrl'])
+            partition_dict[each_source['entityName']] = partition_paths
+
+            #load only if partitions are available
+            if partition_paths:
+                ##load non open partitions
+                non_open_df = spark.read.load(
+                    partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').select(column_list[each_source['entityName']])
+                source_dict[each_source['entityName']] = source_dict[each_source['entityName']].unionAll(non_open_df)
+    
+            record_count = source_dict[each_source['entityName']].count()
             LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
-    source_dict = filter_tables(config, source_dict, LOGGER)
-    all_fee_debug = source_dict['all_fee'].limit(10).toPandas().to_csv(index=False)
-    LOGGER.info("ccai -> all fee data\n\n"+all_fee_debug)
-    # import sys
-    # sys.exit("ccai Exit -> all fee data")
-    return source_dict
+            LOGGER.info(f"{each_source['entityName']} loaded successfully")
+            
+
+    source_dict = filter_tables(config, source_dict,LOGGER)
+
+    return source_dict , partition_dict
 
 
 def derived_tables(config, source_dict, spark, LOGGER):
@@ -602,7 +717,7 @@ def master_profile_merge(config, profile_df, master_tables, source_dict, spark):
     return profile_df
 
 
-def transformations(config, profile_df, transaction_dict, spark,LOGGER,partition_date):
+def transformations(config, profile_df, transaction_dict, spark,LOGGER,partition_date,source_dict_copy):
     for each_column in config["columnMapping"]:
         # each_column: {'sourceEntity': 'all_bookingpassenger', 'sourceColumn': 'PassengerID', 'targetColumn': 'PassengerID'}
         profile_df.createOrReplaceTempView("profiles")
@@ -691,15 +806,24 @@ def transformations(config, profile_df, transaction_dict, spark,LOGGER,partition
             if each_transformation['attributeName'] == 'TravelBaggage':
                 # key_list = ['OBAG','XNBAG','BAG25','PBAG','EXSBAG','BAG35','BAG15','FLYBAG','OVSBAG',
                 # 'GBAG','BAGPRO','XBAG','BAG45','APTBAG','BAG32','BAG10','BAG30','IBAG','BAG20','NBAG','BAG40']
-                latest_partition = get_latest_partition(
-                config['entityDetails'][15]['pathUrl'], config['entityDetails'][15]['partitionDetails']['partitionColumn'][0], partition_date)
-                all_fee_df_url =  config['entityDetails'][15]['pathUrl']+ "/" + latest_partition
-                all_passengerfee_df_url = config['entityDetails'][7]['pathUrl']+ "/" + latest_partition
-                all_fee_df = spark.read.load(all_fee_df_url, format="orc")
+                # latest_partition = get_latest_partition(
+                # config['entityDetails'][15]['pathUrl'], config['entityDetails'][15]['partitionDetails']['partitionColumn'][0], partition_date)
+                # all_fee_df_url =  config['entityDetails'][15]['pathUrl']+ "/" + latest_partition
+                # all_passengerfee_df_url = config['entityDetails'][7]['pathUrl']+ "/" + latest_partition
+                # all_fee_df = spark.read.load(all_fee_df_url, format="orc")
 
-                all_passengerfee_df=spark.read.load(all_passengerfee_df_url, format="orc")
+                # all_passengerfee_df=spark.read.load(all_passengerfee_df_url, format="orc")
 
-                key_list_df = all_passengerfee_df.join(all_fee_df, "FeeCode", "left")
+                # key_list_df = all_passengerfee_df.join(all_fee_df, "FeeCode", "left")
+
+                # key_list_df = key_list_df.select("FeeCode")
+
+                # key_list_df = key_list_df.filter((key_list_df["FeeCode"].like("%BAG%")) | (key_list_df["FeeCode"].like("%PC20%") | (key_list_df["FeeCode"].like("%PC32%"))))
+
+                # key_list_df=key_list_df.select(key_list_df.FeeCode).distinct()
+                # # Collect the matching values into a list
+                # key_list = key_list_df.select("FeeCode").rdd.map(lambda row: row[0]).collect()
+                key_list_df = source_dict_copy["all_passengerfee"].join(source_dict_copy["all_fee"], "FeeCode", "left")
 
                 key_list_df = key_list_df.select("FeeCode")
 
@@ -808,13 +932,14 @@ def transformations(config, profile_df, transaction_dict, spark,LOGGER,partition
                                    each_transformation['sourceColumns'][0]['columnName']+" as "+each_transformation['attributeName']+" from profiles")
         # print(each_transformation)
     return profile_df
-def join_ciam(config,profile_df,spark, partition_date):
-    latest_partition = get_latest_partition(
-                config['ciamPath'], "ods",partition_date)
-    # latest_partition = "ods=2022-04-27"
-    latest_partition = "ods=2023-07-31" #"ods={2023-03-21,}"
 
-    df_ciam = spark.read.load(config['ciamPath']+"/"+ latest_partition, format="orc")
+def join_ciam(config,profile_df,spark, partition_date,LOGGER):
+    ciam_open_url = config['ciamPath'].replace("nonopen","open")
+
+    ciam_open = f"{ciam_open_url}/ods={partition_date}/"
+    df_ciam = spark.read.load(ciam_open, format="orc")
+
+    
     df_ciam = df_ciam.drop("rowid", "s_startdt", "s_starttime", "s_enddt", "s_endtime", "s_deleted_flag", "c_journaltime", "c_transactionid", "c_operationtype", "c_userid", "ods")
     df_ciam = df_ciam.toDF(*["ciam_" + c for c in df_ciam.columns])
     df_ciam = df_ciam.withColumn("ciam_email", F.lower(F.col("ciam_email")))
@@ -840,51 +965,102 @@ def fillNa(config, profile_df, spark):
 
 #change 2
 
-def ignore_bookings(config, profile_df, spark, partition_date,LOGGER):
-    
-    
-    voucher_url=config['voucherPath']
-    LOGGER.info("started ignore_bookings")
-    
-    partition_column = config['entityDetails'][0]['partitionDetails']['partitionColumn']
-    latest_partition = get_latest_partition(
-            config['entityDetails'][0]['pathUrl'], config['entityDetails'][0]['partitionDetails']['partitionColumn'][0], partition_date)
-    # latest_partition = "ods=2023-07-31" #comment later
-    # voucher_df = spark.read.load(voucher_url+ "/" + latest_partition, format="orc")
-    voucher_df = spark.read.load(voucher_url+ "/" + "ods=2023-07-31", format="orc")
 
-    
-    booking_df = spark.read.load(config['entityDetails'][1]['pathUrl']+ "/" + latest_partition, format="orc")
-    
-    record_df=booking_df.select('BookingID','RecordLocator','Status')
-    # voucherCode_df=voucher_df.select('RecordLocator','VoucherBasisCode')
-    profile_df=profile_df.join(record_df,on='BookingID',how='left')
-    # profile_df=profile_df.join(voucherCode_df,on='RecordLocator',how='left')
-    ## commnt for dev archieve data ---> start
-    result_df=booking_df.join(voucher_df,on='RecordLocator',how='left').where(voucher_df.VoucherBasisCode.like('%CSP%')) 
-    result_df=result_df.select('BookingID')
-    profile_df=profile_df.join(result_df,on='BookingID',how='left_anti')
-    ## commnt for dev archieve data ---> end
-    if ("Status" in profile_df.columns):
-        profile_df=profile_df.select("*").where(profile_df.Status!=4)
-        LOGGER.info("Status!=4 filtered in ignore_bookings")
-    else:
-        LOGGER.info("Status not found in  ignore_bookings")
-    
-    profile_df=profile_df.dropDuplicates(["PassengerID"])
-    profile_df=profile_df.na.fill("Unknown")
+def get_df(config,spark,partition_date,archive_date,LOGGER):
+        # load open partitions - archive and a business date
+    open_dates = [partition_date,archive_date]
 
-    LOGGER.info("ignore_bookings completed")
-    
-    return profile_df   
+    open_paths = []
+    for date in open_dates:
+        path = config["voucherPath"].replace("nonopen","open") + "/ods=" + date + "/"
+        open_paths.append(path)
+
+    try:
+        #try loading both partitions
+        voucher_df = spark.read.load(
+            open_paths, format="orc")
+    except:
+        #try loading business date partition
+        voucher_df = spark.read.load(
+            open_paths[0], format="orc")
+        
+
+    #get available non open partitions
+    bucket,prefix = get_bucket(config,"all_voucher")
+    available_partitions = list_folders_in_path(bucket, prefix,LOGGER,archive_date,partition_date)
+    partition_paths = getpaths(available_partitions,"all_voucher",config["voucherPath"])
 
 
+    #load only if partitions are available
+    if partition_paths:
+        ##load non open partitions
+        non_open_df = spark.read.load(
+            partition_paths, format="orc").where('c_operationtype = "D"')
+        voucher_df = voucher_df.unionAll(non_open_df)
 
-def profile(config_path, spark, partition_date, LOGGER):
+    record_count = voucher_df.count()
+    LOGGER.info("ccai -> Load Data - {} : {} rows".format("voucher_df", record_count))
+    LOGGER.info("voucher_df loaded successfully")
+
+    return voucher_df
+
+
+def add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy,archive_date):
+
+    try:
+        voucher_df = get_df(config,spark,partition_date,archive_date,LOGGER)
+
+        
+        source_dict_copy["all_booking"].createOrReplaceTempView("booking")
+        source_dict_copy["all_bookingpassenger"].createOrReplaceTempView("bookingpassenger")
+        source_dict_copy["all_payment"].createOrReplaceTempView("payment")
+        voucher_df.createOrReplaceTempView("voucher")
+        
+        # query = "SELECT DISTINCT b.BookingID,  v.VoucherReference, DATE_ADD(b.BookingUTC, 8*3600) AS StatusDate, DATE_ADD(b.BookingUTC, 8*3600) AS RedemptionDate ,v.VoucherBasisCode FROM booking b INNER JOIN bookingpassenger bp ON bp.BookingID = b.BookingID INNER JOIN payment p ON p.BookingID = b.BookingID INNER JOIN voucher v ON v.RecordLocator = b.RecordLocator AND v.Amount > v.Available WHERE 1=1 AND CAST(b.BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE) AND b.Status IN (2, 3) AND p.AuthorizationStatus = 4 AND v.Status = 1 AND v.VoucherBasisCode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5')"
+        query = "SELECT DISTINCT b.BookingID FROM booking b INNER JOIN bookingpassenger bp ON bp.BookingID = b.BookingID INNER JOIN payment p ON p.BookingID = b.BookingID INNER JOIN voucher v ON v.RecordLocator = b.RecordLocator AND v.Amount > v.Available WHERE 1=1 AND CAST(b.BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE) AND b.Status IN (2, 3) AND p.AuthorizationStatus = 4 AND v.Status = 1 AND v.VoucherBasisCode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5')"
+        csp_df = spark.sql(query)
+        LOGGER.info("ccai - csp row count : " + str(csp_df.count()))
+
+        LOGGER.info("ccai - profile row count before booking join: " + str(profile_df.count()))
+        profile_df = profile_df.join(source_dict_copy["all_booking"].select("BookingID","RecordLocator","Status","BookingUTC"),on="BookingID",how="left")
+        LOGGER.info("ccai - profile row count after booking join: " + str(profile_df.count()))
+
+        voucher_df = voucher_df.select("RecordLocator","VoucherReference","VoucherBasisCode")
+        profile_df = profile_df.join(voucher_df,on="RecordLocator",how="left")
+        LOGGER.info("ccai - profile row count after voucher join: " + str(profile_df.count()))
+
+        csp_df = csp_df.withColumn("is_csp", when(col("BookingID").isNotNull(), True).otherwise(False))
+        LOGGER.info("ccai - csp row count : " + str(csp_df.count()))
+
+        profile_df = profile_df.join(csp_df,on="BookingID",how="left")
+        LOGGER.info("ccai - profile row count after csp join: " + str(profile_df.count()))
+        profile_df = profile_df.withColumn("is_csp", when(col("is_csp").isNotNull(), True).otherwise(False))
+        LOGGER.info("ccai - csp_check: " + str(profile_df.where("is_csp").count()))
+        
+        # Add a new column 'RedemptionDate' with 8 hours added to 'BookingUTC'
+        profile_df = profile_df.withColumn("RedemptionDate", expr("(from_utc_timestamp(BookingUTC, 'UTC') + INTERVAL 8 HOURS)"))
+        profile_df = profile_df.withColumn("StatusDate", expr("CAST(from_utc_timestamp(BookingUTC, 'UTC') + INTERVAL 8 HOURS AS DATE)"))
+
+        profile_df = profile_df.dropDuplicates(subset=["PassengerID"])
+        LOGGER.info(f"ccai csp attribute added")
+        return profile_df   
+    except Exception as e:
+        LOGGER.info(f"ccai Exception : {e}")
+        return profile_df
+
+
+
+def compute_profile(config_path, spark, partition_date, LOGGER):
+    spark_conf(spark)
     LOGGER.info("ccai - ConfigPath : " + str(config_path))
     config = get_config(config_path)
-    source_dict = load_data(config, partition_date, spark, LOGGER)
+    archive_date = "2021-01-01"
+    start_date = archive_date
+    end_date = partition_date
+    LOGGER.info("ccai - profile loading complete")
+    source_dict ,partition_dict = load_data(config, start_date,end_date, spark,LOGGER,partition_date,archive_date)
     LOGGER.info("ccai - data loading complete")
+    source_dict_copy = source_dict.copy()
     source_dict = derived_tables(config, source_dict, spark, LOGGER)
     LOGGER.info("ccai - derived tables complete")
     source_dict, transaction_dict = transaction_conversion(
@@ -898,7 +1074,7 @@ def profile(config_path, spark, partition_date, LOGGER):
 
     # profile_df = joined_df.join(profile_df, joined_df.all_bookingpassenger_PassengerID == profile_df.PassengerID, "left_outer")
 
-    profile_df = transformations(config, joined_df, transaction_dict, spark,LOGGER,partition_date)
+    profile_df = transformations(config, joined_df, transaction_dict, spark,LOGGER,partition_date,source_dict_copy)
     profile_df.cache()
     LOGGER.info("ccai - transformations complete")
     LOGGER.info("ccai - row count : " + str(profile_df.count()))
@@ -924,36 +1100,27 @@ def profile(config_path, spark, partition_date, LOGGER):
     profile_df.cache()
     LOGGER.info("ccai - Profile DF groupby Agg ")
 
-    LOGGER.info("ccai - row count : " + str(profile_df.count()))
+    LOGGER.info("ccai - profile row count : " + str(profile_df.count()))
 
     profile_df = fillNa(config, profile_df, spark)
-    profile_df = join_ciam(config, profile_df, spark, partition_date)
+    profile_df = join_ciam(config, profile_df, spark, partition_date,LOGGER)
     LOGGER.info("ccai - join ciam complete")
     LOGGER.info("ccai - row count : " + str(profile_df.count()))
     
-    #change 1
-    profile_df= ignore_bookings(config, profile_df, spark, partition_date,LOGGER)
+    # change 1
+
+    profile_df= add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy,archive_date)
+    columns = profile_df.columns
+    try:
+        LOGGER.info(f"columns post ignore bookings: {columns}")
+    except Exception as e:
+        LOGGER.info(f"ccai Exception: {e}")
+    profile_df = profile_df.dropDuplicates(subset=["PassengerID"])
+
+    LOGGER.info("ccai - profile row count: " + str(profile_df.count()))
     profile_df.cache()
-    LOGGER.info("ccai - bookings ignored")
-    LOGGER.info("ccai - row count : " + str(profile_df.count()))
-
-
-    return profile_df
-
-
-
-def compute_profile(config_path, spark, partition_date, LOGGER):
-    spark_conf(spark)
-    config = get_config(config_path)
-    profile_df = profile(config_path, spark, partition_date, LOGGER)
-    LOGGER.info("ccai - profile row count : " + str(profile_df.count()))
-    archive_df = profile(config_path, spark, "ods=2021-01-01", LOGGER)
-    LOGGER.info("ccai - archive row count : " + str(archive_df.count()))
-    
-
-    profile_df = profile_df.unionAll(archive_df)
-    profile_df=profile_df.dropDuplicates(["PassengerID"])
-    LOGGER.info("ccai - final row count : " + str(profile_df.count()))
+    # LOGGER.info("ccai - bookings ignored")
+    # LOGGER.info("ccai - row count : " + str(profile_df.count()))
 
     save_path = config['storageDetails'][0]['pathUrl']
     ucp_path = config['storageDetails'][2]['pathUrl'] + \
