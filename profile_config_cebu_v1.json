@@ -803,7 +803,23 @@
             "columnName": "AdditionalContactStreetAddress",
             "dataType": "string",
             "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "RecordLocator",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "all_booking_Status",
+            "dataType": "integer",
+            "defaultValue": 999
+        },
+        {
+            "columnName": "all_payment_AuthorizationStatus",
+            "dataType": "integer",
+            "defaultValue": 999
         }
+
     ],
     "columnMapping": [
         {
@@ -3206,6 +3222,25 @@
                 }
             ],
             "transformationFunction": "GetAdditionalContactStreetAddress"
+        },
+        {
+            "attributeName": "RecordLocator",
+            "sourceColumns": [
+                {
+                    "entityName": "all_booking",
+                    "columnName": "RecordLocator"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "Status"
+                },
+                {
+                    "entityName": "all_payment",
+                    "columnName": "AuthorizationStatus"
+                }
+                
+            ],
+            "transformationFunction": "GetColumns"
         }
     ],
     "storageDetails": [

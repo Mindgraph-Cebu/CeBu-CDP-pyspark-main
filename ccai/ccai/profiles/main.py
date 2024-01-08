@@ -93,9 +93,9 @@ def get_columns_list(config):
     # apply distinct on each list
     for eachColumnList in column_list:
         column_list[eachColumnList] = list(set(column_list[eachColumnList]))
-    column_list["all_booking"].append("RecordLocator")
-    column_list["all_booking"].append("Status")
-    column_list["all_payment"].append("AuthorizationStatus")
+    # column_list["all_booking"].append("RecordLocator")
+    # column_list["all_booking"].append("Status")
+    # column_list["all_payment"].append("AuthorizationStatus")
     return column_list
 
 
@@ -230,7 +230,7 @@ def load_data(config, start_date,end_date,spark,LOGGER,partition_date,archive_da
             record_count = source_dict[each_source['entityName']].count()
             LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
             LOGGER.info(f"{each_source['entityName']} loaded successfully")
-            
+
 
     source_dict = filter_tables(config, source_dict,LOGGER)
 
@@ -1002,6 +1002,8 @@ def get_df(config,spark,partition_date,archive_date,LOGGER):
     LOGGER.info("ccai -> Load Data - {} : {} rows".format("voucher_df", record_count))
     LOGGER.info("voucher_df loaded successfully")
 
+
+
     return voucher_df
 
 
@@ -1016,30 +1018,33 @@ def add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy,ar
         source_dict_copy["all_payment"].createOrReplaceTempView("payment")
         voucher_df.createOrReplaceTempView("voucher")
         
-        # query = "SELECT DISTINCT b.BookingID,  v.VoucherReference, DATE_ADD(b.BookingUTC, 8*3600) AS StatusDate, DATE_ADD(b.BookingUTC, 8*3600) AS RedemptionDate ,v.VoucherBasisCode FROM booking b INNER JOIN bookingpassenger bp ON bp.BookingID = b.BookingID INNER JOIN payment p ON p.BookingID = b.BookingID INNER JOIN voucher v ON v.RecordLocator = b.RecordLocator AND v.Amount > v.Available WHERE 1=1 AND CAST(b.BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE) AND b.Status IN (2, 3) AND p.AuthorizationStatus = 4 AND v.Status = 1 AND v.VoucherBasisCode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5')"
-        query = "SELECT DISTINCT b.BookingID FROM booking b INNER JOIN bookingpassenger bp ON bp.BookingID = b.BookingID INNER JOIN payment p ON p.BookingID = b.BookingID INNER JOIN voucher v ON v.RecordLocator = b.RecordLocator AND v.Amount > v.Available WHERE 1=1 AND CAST(b.BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE) AND b.Status IN (2, 3) AND p.AuthorizationStatus = 4 AND v.Status = 1 AND v.VoucherBasisCode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5')"
+        
+        # query = "SELECT DISTINCT b.BookingID FROM booking b INNER JOIN bookingpassenger bp ON bp.BookingID = b.BookingID INNER JOIN payment p ON p.BookingID = b.BookingID INNER JOIN voucher v ON v.RecordLocator = b.RecordLocator AND v.Amount > v.Available WHERE 1=1 AND CAST(b.BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE) AND b.Status IN (2, 3) AND p.AuthorizationStatus = 4 AND v.Status = 1 AND v.VoucherBasisCode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5')"
+        query = "SELECT DISTINCT b.BookingID FROM booking b INNER JOIN bookingpassenger bp ON bp.BookingID = b.BookingID INNER JOIN payment p ON p.BookingID = b.BookingID AND p.AuthorizationStatus = 4 INNER JOIN voucher v ON v.RecordLocator = b.RecordLocator AND v.Amount > v.Available AND v.Status = 1 WHERE 1=1 AND CAST(b.BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE) AND b.Status IN (2, 3) AND v.VoucherBasisCode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5')"
+
         csp_df = spark.sql(query)
+ 
         LOGGER.info("ccai - csp row count : " + str(csp_df.count()))
 
-        LOGGER.info("ccai - profile row count before booking join: " + str(profile_df.count()))
-        profile_df = profile_df.join(source_dict_copy["all_booking"].select("BookingID","RecordLocator","Status","BookingUTC"),on="BookingID",how="left")
-        LOGGER.info("ccai - profile row count after booking join: " + str(profile_df.count()))
+        # LOGGER.info("ccai - profile row count before booking join: " + str(profile_df.count()))
+        # profile_df = profile_df.join(source_dict_copy["all_booking"].select("BookingID","RecordLocator","Status","BookingUTC"),on="BookingID",how="left")
+        # LOGGER.info("ccai - profile row count after booking join: " + str(profile_df.count()))
 
-        voucher_df = voucher_df.select("RecordLocator","VoucherReference","VoucherBasisCode")
+        voucher_df = voucher_df.select("RecordLocator","VoucherReference","VoucherBasisCode","Status","Amount","Available")
         profile_df = profile_df.join(voucher_df,on="RecordLocator",how="left")
         LOGGER.info("ccai - profile row count after voucher join: " + str(profile_df.count()))
 
-        csp_df = csp_df.withColumn("is_csp", when(col("BookingID").isNotNull(), True).otherwise(False))
+        csp_df = csp_df.withColumn("is_csp", when(col("BookingID").isNotNull(), "yes").otherwise("no"))
         LOGGER.info("ccai - csp row count : " + str(csp_df.count()))
 
         profile_df = profile_df.join(csp_df,on="BookingID",how="left")
         LOGGER.info("ccai - profile row count after csp join: " + str(profile_df.count()))
-        profile_df = profile_df.withColumn("is_csp", when(col("is_csp").isNotNull(), True).otherwise(False))
-        LOGGER.info("ccai - csp_check: " + str(profile_df.where("is_csp").count()))
+        profile_df = profile_df.withColumn("is_csp", when(col("is_csp") == 'yes', "yes").otherwise("no"))
+        LOGGER.info("ccai - csp_check: " + str(profile_df.where("is_csp = 'yes'").count()))
         
         # Add a new column 'RedemptionDate' with 8 hours added to 'BookingUTC'
-        profile_df = profile_df.withColumn("RedemptionDate", expr("(from_utc_timestamp(BookingUTC, 'UTC') + INTERVAL 8 HOURS)"))
-        profile_df = profile_df.withColumn("StatusDate", expr("CAST(from_utc_timestamp(BookingUTC, 'UTC') + INTERVAL 8 HOURS AS DATE)"))
+        # profile_df = profile_df.withColumn("RedemptionDate", expr("(from_utc_timestamp(BookingUTC, 'UTC') + INTERVAL 8 HOURS)"))
+        # profile_df = profile_df.withColumn("StatusDate", expr("CAST(from_utc_timestamp(BookingUTC, 'UTC') + INTERVAL 8 HOURS AS DATE)"))
 
         profile_df = profile_df.dropDuplicates(subset=["PassengerID"])
         LOGGER.info(f"ccai csp attribute added")
@@ -1075,6 +1080,10 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     # profile_df = joined_df.join(profile_df, joined_df.all_bookingpassenger_PassengerID == profile_df.PassengerID, "left_outer")
 
     profile_df = transformations(config, joined_df, transaction_dict, spark,LOGGER,partition_date,source_dict_copy)
+
+    profile_df = profile_df.withColumnRenamed('all_booking_RecordLocator','RecordLocator')
+
+
     profile_df.cache()
     LOGGER.info("ccai - transformations complete")
     LOGGER.info("ccai - row count : " + str(profile_df.count()))

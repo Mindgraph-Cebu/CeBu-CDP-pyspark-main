@@ -279,10 +279,11 @@ def booker_compute(spark, df, save_path_prefix, LOGGER):
                                 split(BookingDate,' ')[0] as booking_date,
                                 New_Revenue as revenue,
                                 BookingCurrency as currency,
-                                RecordLocator as record_locator
+                                RecordLocator as record_locator,
+                                is_csp
                                 )), 'map<string,string>'))) as Details
     FROM (
-        SELECT PersonID,New_Revenue,TravelDate,BookingDate,TravelOrigin,TravelDestination,TravelDestination,TravelInsurance,TravelBaggage,TravelMeals,BookingCurrency,RecordLocator,
+        SELECT PersonID,New_Revenue,TravelDate,BookingDate,TravelOrigin,TravelDestination,TravelDestination,TravelInsurance,TravelBaggage,TravelMeals,BookingCurrency,RecordLocator,is_csp,
             ROW_NUMBER() OVER (PARTITION BY PersonID ORDER BY TravelDate DESC) AS row_num 
         FROM cdp_profiles
     ) AS subquery 
@@ -378,10 +379,11 @@ def passenger_compute(spark, df, save_path_prefix, LOGGER):
                                 split(TravelDate,' ')[0] as travel_date,
                                 split(BookingDate,' ')[0] as booking_date,
                                 Revenue as revenue,
-                                RecordLocator as record_locator
+                                RecordLocator as record_locator,
+                                is_csp
                                 )), 'map<string,string>'))) as Details
     FROM (
-        SELECT passenger_hash,Revenue,TravelDate,BookingDate,TravelOrigin,TravelDestination,TravelDestination,TravelInsurance,TravelBaggage,TravelMeals,RecordLocator,
+        SELECT passenger_hash,Revenue,TravelDate,BookingDate,TravelOrigin,TravelDestination,TravelDestination,TravelInsurance,TravelBaggage,TravelMeals,RecordLocator,is_csp,
             ROW_NUMBER() OVER (PARTITION BY passenger_hash ORDER BY TravelDate DESC) AS row_num 
         FROM cdp_profiles
     ) AS subquery 
@@ -467,7 +469,8 @@ def compute_ui(config_path, spark, profile_path, LOGGER):
         "passenger_hash",
         "TravelSeat",
         "TravelDate",
-        "RecordLocator"
+        "RecordLocator",
+        "is_csp"
     )
     exchange_rates = {
         "THB": 0.657845,
