@@ -818,6 +818,11 @@
             "columnName": "all_payment_AuthorizationStatus",
             "dataType": "integer",
             "defaultValue": 999
+        },
+        {
+            "columnName": "all_payment_AccountNumber",
+            "dataType": "string",
+            "defaultValue": "Unknown"
         }
 
     ],
@@ -3237,6 +3242,10 @@
                 {
                     "entityName": "all_payment",
                     "columnName": "AuthorizationStatus"
+                },
+                {
+                    "entityName": "all_payment",
+                    "columnName": "AccountNumber"
                 }
                 
             ],
@@ -3276,3 +3285,5 @@
     "ciamPath": "s3a://edw-dl-process-data-dev/data/ciam/hdata/ciam_all_diffen_nonopen/ciam_all_edwcustomer",
     "voucherPath":"s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_voucher"
 }
+
+

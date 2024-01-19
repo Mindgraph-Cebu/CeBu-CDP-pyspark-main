@@ -208,10 +208,14 @@ def load_data(config, start_date,end_date,spark,LOGGER,partition_date,archive_da
                 #try loading both partitions
                 source_dict[each_source['entityName']] = spark.read.load(
                     open_paths, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+                record_count = source_dict[each_source['entityName']].count()
+                LOGGER.info("ccai -> Load Data b&a - {} : {} rows".format(each_source['entityName'], record_count))
             except:
                 #try loading business date partition
                 source_dict[each_source['entityName']] = spark.read.load(
                     open_paths[0], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+                record_count = source_dict[each_source['entityName']].count()
+                LOGGER.info("ccai -> Load Data b - {} : {} rows".format(each_source['entityName'], record_count))
                 
         
             #get available non open partitions
@@ -226,6 +230,9 @@ def load_data(config, start_date,end_date,spark,LOGGER,partition_date,archive_da
                 non_open_df = spark.read.load(
                     partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').select(column_list[each_source['entityName']])
                 source_dict[each_source['entityName']] = source_dict[each_source['entityName']].unionAll(non_open_df)
+
+                record_count = non_open_df.count()
+                LOGGER.info("ccai -> Load Data non open  - {} : {} rows".format(each_source['entityName'], record_count))
     
             record_count = source_dict[each_source['entityName']].count()
             LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
@@ -1014,13 +1021,15 @@ def add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy,ar
 
         
         source_dict_copy["all_booking"].createOrReplaceTempView("booking")
-        source_dict_copy["all_bookingpassenger"].createOrReplaceTempView("bookingpassenger")
+        # source_dict_copy["all_bookingpassenger"].createOrReplaceTempView("bookingpassenger")
         source_dict_copy["all_payment"].createOrReplaceTempView("payment")
         voucher_df.createOrReplaceTempView("voucher")
         
         
-        # query = "SELECT DISTINCT b.BookingID FROM booking b INNER JOIN bookingpassenger bp ON bp.BookingID = b.BookingID INNER JOIN payment p ON p.BookingID = b.BookingID INNER JOIN voucher v ON v.RecordLocator = b.RecordLocator AND v.Amount > v.Available WHERE 1=1 AND CAST(b.BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE) AND b.Status IN (2, 3) AND p.AuthorizationStatus = 4 AND v.Status = 1 AND v.VoucherBasisCode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5')"
-        query = "SELECT DISTINCT b.BookingID FROM booking b INNER JOIN bookingpassenger bp ON bp.BookingID = b.BookingID INNER JOIN payment p ON p.BookingID = b.BookingID AND p.AuthorizationStatus = 4 INNER JOIN voucher v ON v.RecordLocator = b.RecordLocator AND v.Amount > v.Available AND v.Status = 1 WHERE 1=1 AND CAST(b.BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE) AND b.Status IN (2, 3) AND v.VoucherBasisCode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5')"
+        # query = "SELECT DISTINCT b.BookingID FROM booking b INNER JOIN bookingpassenger bp ON bp.BookingID = b.BookingID INNER JOIN payment p ON p.BookingID = b.BookingID AND p.AuthorizationStatus = 4 INNER JOIN voucher v ON v.RecordLocator = b.RecordLocator AND v.Amount > v.Available AND v.Status = 1 WHERE 1=1 AND CAST(b.BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE) AND b.Status IN (2, 3) AND v.VoucherBasisCode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5')"
+
+        query = "SELECT DISTINCT b.BookingID FROM booking b INNER JOIN payment p ON b.BookingID = p.BookingID AND p.PaymentMethodCode = 'VO' INNER JOIN voucher v ON v.VoucherReference = p.AccountNumber AND v.Amount > v.Available WHERE CAST(b.BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE) AND b.status IN (2,3) AND v.voucherbasiscode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5') AND p.AuthorizationStatus = 4 AND v.status = 1;"
+
 
         csp_df = spark.sql(query)
  
