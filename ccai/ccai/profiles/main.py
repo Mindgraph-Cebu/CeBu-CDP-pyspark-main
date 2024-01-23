@@ -396,117 +396,125 @@ def join_entities(config, source_dict, spark, LOGGER):
     joined_df.createOrReplaceTempView("joined_df")
     LOGGER.info("ccai -> Type of joined_df : {}".format( type(joined_df)))
     LOGGER.info("ccai -> join entities - check1 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check1 : {}".format(joined_df.select('all_booking_BookingID').distinct().count()))
     
     # join all_bookingpassenger on BookingID
     joined_df = spark.sql(
         "select * from joined_df left join all_bookingpassenger on joined_df.all_booking_BookingID <=> all_bookingpassenger.all_bookingpassenger_BookingID")
     joined_df.createOrReplaceTempView("joined_df")
     LOGGER.info("ccai -> join entities - check2 : {}".format( joined_df.count()))
-
+    LOGGER.info("ccai -> bookingid count - check2 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_person on PersonID
     joined_df = spark.sql(
         "select * from joined_df left join all_person on joined_df.all_agent_PersonID <=> all_person.all_person_PersonID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check3 : {}".format( joined_df.count()))
-
+    LOGGER.info("ccai -> join entities - check3 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check3 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_personname on PersonID
     joined_df = spark.sql(
         "select * from joined_df left join all_personname on joined_df.all_person_PersonID <=> all_personname.all_personname_PersonID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check4 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> join entities - check4 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check4 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
 
     # join all_personemail on PersonID
     joined_df = spark.sql(
         "select * from joined_df left join all_personemail on joined_df.all_person_PersonID <=> all_personemail.all_personemail_PersonID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check5 : {}".format( joined_df.count()))
-
+    LOGGER.info("ccai -> join entities - check5 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check5 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_personphone on PersonID
     joined_df = spark.sql(
         "select * from joined_df left join all_personphone on joined_df.all_person_PersonID <=> all_personphone.all_personphone_PersonID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check6 : {}".format( joined_df.count()))
-
+    LOGGER.info("ccai -> join entities - check6 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check6 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_personaddress on PersonID
     joined_df = spark.sql(
         "select * from joined_df left join all_personaddress on joined_df.all_person_PersonID <=> all_personaddress.all_personaddress_PersonID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check7 : {}".format( joined_df.count()))
-
+    LOGGER.info("ccai -> join entities - check7 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check7 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_traveldoc on PersonID
     joined_df = spark.sql(
         "select * from joined_df left join all_traveldoc on joined_df.all_person_PersonID <=> all_traveldoc.all_traveldoc_PersonID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check8 : {}".format( joined_df.count()))
-
+    LOGGER.info("ccai -> join entities - check8 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check8 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join GetPassportNumber_all_traveldoc on PersonID
     joined_df = spark.sql(
         "select * from joined_df left join GetPassportNumber_all_traveldoc on joined_df.all_person_PersonID <=> GetPassportNumber_all_traveldoc.GetPassportNumber_all_traveldoc_PersonID")
     joined_df.createOrReplaceTempView("joined_df")
     # joined_df.cache()
-    # LOGGER.info("ccai -> join entities - check9 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> join entities - check9 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check9 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     joined_df = spark.sql(
         "select * from joined_df left join all_payment on joined_df.all_booking_BookingID <=> all_payment.all_payment_BookingID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check10 : {}".format( joined_df.count()))
-
+    LOGGER.info("ccai -> join entities - check10 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check10 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
     # join all_bookingcontact on BookingID
     joined_df = spark.sql(
         "select * from joined_df left join all_bookingcontact on joined_df.all_booking_BookingID <=> all_bookingcontact.all_bookingcontact_BookingID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check11 : {}".format( joined_df.count()))
-
+    LOGGER.info("ccai -> join entities - check11 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check11 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join GetTravelSoloOrGroup_all_bookingpassenger on BookingID
     joined_df = spark.sql("select * from joined_df left join GetTravelSoloOrGroup_all_bookingpassenger on joined_df.all_booking_BookingID <=> GetTravelSoloOrGroup_all_bookingpassenger.GetTravelSoloOrGroup_all_bookingpassenger_BookingID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check12 : {}".format( joined_df.count()))
-
+    LOGGER.info("ccai -> join entities - check12 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check12 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_passengeraddress on PassengerID
     joined_df = spark.sql(
         "select * from joined_df left join all_passengeraddress on joined_df.all_bookingpassenger_PassengerID <=> all_passengeraddress.all_passengeraddress_PassengerID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check13 : {}".format( joined_df.count()))
-
+    LOGGER.info("ccai -> join entities - check13 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check13 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_passengertraveldoc on PassengerID
     joined_df = spark.sql(
         "select * from joined_df left join all_passengertraveldoc on joined_df.all_bookingpassenger_PassengerID <=> all_passengertraveldoc.all_passengertraveldoc_PassengerID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check14 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> join entities - check14 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check14 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join GetPassportNumber_all_passengertraveldoc on PassengerID
     joined_df = spark.sql("select * from joined_df left join GetPassportNumber_all_passengertraveldoc on joined_df.all_bookingpassenger_PassengerID <=> GetPassportNumber_all_passengertraveldoc.GetPassportNumber_all_passengertraveldoc_PassengerID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check15 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> join entities - check15 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check15 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_passengerjourneysegment on PassengerID
     joined_df = spark.sql(
         "select * from joined_df left join all_passengerjourneysegment on joined_df.all_bookingpassenger_PassengerID <=> all_passengerjourneysegment.all_passengerjourneysegment_PassengerID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check16 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> join entities - check16 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check16 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
 
     # join GetTravelDestination_all_passengerjourneysegment on PassengerID
     joined_df = spark.sql("select * from joined_df left join GetTravelDestination_all_passengerjourneysegment on joined_df.all_bookingpassenger_PassengerID <=> GetTravelDestination_all_passengerjourneysegment.GetTravelDestination_all_passengerjourneysegment_PassengerID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check17 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> join entities - check17 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check17 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
 
     # join all_passengerjourneyleg on PassengerID
     joined_df = spark.sql(
         "select * from joined_df left join all_passengerjourneyleg on joined_df.all_bookingpassenger_PassengerID <=> all_passengerjourneyleg.all_passengerjourneyleg_PassengerID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check18 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> join entities - check18 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check18 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_fee on PassengerID
     joined_df = spark.sql(
@@ -514,6 +522,7 @@ def join_entities(config, source_dict, spark, LOGGER):
     joined_df.cache()
     joined_df.createOrReplaceTempView("joined_df")
     LOGGER.info("ccai -> join entities - check19 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check19 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
 
     return joined_df
@@ -1024,10 +1033,7 @@ def add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy,ar
         # source_dict_copy["all_bookingpassenger"].createOrReplaceTempView("bookingpassenger")
         source_dict_copy["all_payment"].createOrReplaceTempView("payment")
         voucher_df.createOrReplaceTempView("voucher")
-        
-        
-        # query = "SELECT DISTINCT b.BookingID FROM booking b INNER JOIN bookingpassenger bp ON bp.BookingID = b.BookingID INNER JOIN payment p ON p.BookingID = b.BookingID AND p.AuthorizationStatus = 4 INNER JOIN voucher v ON v.RecordLocator = b.RecordLocator AND v.Amount > v.Available AND v.Status = 1 WHERE 1=1 AND CAST(b.BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE) AND b.Status IN (2, 3) AND v.VoucherBasisCode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5')"
-
+    
         query = "SELECT DISTINCT b.BookingID FROM booking b INNER JOIN payment p ON b.BookingID = p.BookingID AND p.PaymentMethodCode = 'VO' INNER JOIN voucher v ON v.VoucherReference = p.AccountNumber AND v.Amount > v.Available WHERE CAST(b.BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE) AND b.status IN (2,3) AND v.voucherbasiscode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5') AND p.AuthorizationStatus = 4 AND v.status = 1;"
 
 
@@ -1035,9 +1041,6 @@ def add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy,ar
  
         LOGGER.info("ccai - csp row count : " + str(csp_df.count()))
 
-        # LOGGER.info("ccai - profile row count before booking join: " + str(profile_df.count()))
-        # profile_df = profile_df.join(source_dict_copy["all_booking"].select("BookingID","RecordLocator","Status","BookingUTC"),on="BookingID",how="left")
-        # LOGGER.info("ccai - profile row count after booking join: " + str(profile_df.count()))
 
         voucher_df = voucher_df.select("RecordLocator","VoucherReference","VoucherBasisCode","Status","Amount","Available")
         profile_df = profile_df.join(voucher_df,on="RecordLocator",how="left")
@@ -1082,14 +1085,14 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     LOGGER.info("ccai - transaction conversion complete")
     joined_df = join_entities(config, source_dict, spark, LOGGER)
     LOGGER.info("ccai - join entities complete")
-
+    
     profile_column_list, profile_schema = create_profile(config)
     LOGGER.info("ccai - create profile complete")
 
     # profile_df = joined_df.join(profile_df, joined_df.all_bookingpassenger_PassengerID == profile_df.PassengerID, "left_outer")
 
     profile_df = transformations(config, joined_df, transaction_dict, spark,LOGGER,partition_date,source_dict_copy)
-
+    LOGGER.info("ccai -> bookingid count - check20 : {}".format(profile_df.select('BookingID').distinct().count()))
     profile_df = profile_df.withColumnRenamed('all_booking_RecordLocator','RecordLocator')
 
 
@@ -1105,7 +1108,7 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     profile_df = profile_atomic_transformation(config, profile_df, spark)
     LOGGER.info("ccai - atomic transformation complete")
     LOGGER.info("ccai - row count : " + str(profile_df.count()))
-
+    LOGGER.info("ccai -> bookingid count - check21 : {}".format(profile_df.select('BookingID').distinct().count()))
 
 
     # apply profile schema
@@ -1117,24 +1120,21 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     profile_df = profile_df.groupBy("ProvisionalPrimaryKey").agg(*col_list)
     profile_df.cache()
     LOGGER.info("ccai - Profile DF groupby Agg ")
-
+    LOGGER.info("ccai -> bookingid count - check21 : {}".format(profile_df.select('BookingID').distinct().count()))
     LOGGER.info("ccai - profile row count : " + str(profile_df.count()))
 
     profile_df = fillNa(config, profile_df, spark)
     profile_df = join_ciam(config, profile_df, spark, partition_date,LOGGER)
     LOGGER.info("ccai - join ciam complete")
     LOGGER.info("ccai - row count : " + str(profile_df.count()))
-    
+    LOGGER.info("ccai -> bookingid count - check22 : {}".format(profile_df.select('BookingID').distinct().count()))
     # change 1
 
     profile_df= add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy,archive_date)
-    columns = profile_df.columns
-    try:
-        LOGGER.info(f"columns post ignore bookings: {columns}")
-    except Exception as e:
-        LOGGER.info(f"ccai Exception: {e}")
-    profile_df = profile_df.dropDuplicates(subset=["PassengerID"])
+    LOGGER.info("ccai -> bookingid count - check23 : {}".format(profile_df.select('BookingID').distinct().count()))
 
+    profile_df = profile_df.dropDuplicates(subset=["PassengerID"])
+    LOGGER.info("ccai -> bookingid count - check24 : {}".format(profile_df.select('BookingID').distinct().count()))
     LOGGER.info("ccai - profile row count: " + str(profile_df.count()))
     profile_df.cache()
     # LOGGER.info("ccai - bookings ignored")

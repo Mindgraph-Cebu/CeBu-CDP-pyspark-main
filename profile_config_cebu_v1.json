@@ -808,22 +808,8 @@
             "columnName": "RecordLocator",
             "dataType": "string",
             "defaultValue": "Unknown"
-        },
-        {
-            "columnName": "all_booking_Status",
-            "dataType": "integer",
-            "defaultValue": 999
-        },
-        {
-            "columnName": "all_payment_AuthorizationStatus",
-            "dataType": "integer",
-            "defaultValue": 999
-        },
-        {
-            "columnName": "all_payment_AccountNumber",
-            "dataType": "string",
-            "defaultValue": "Unknown"
         }
+
 
     ],
     "columnMapping": [
