@@ -1110,6 +1110,17 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     LOGGER.info("ccai - row count : " + str(profile_df.count()))
     LOGGER.info("ccai -> bookingid count - check21 : {}".format(profile_df.select('BookingID').distinct().count()))
 
+    ########### CheckPoints - Start #############
+    bookingIds_before = profile_df.select("ProvisionalPrimaryKey","BookingID").dropDuplicates().cache()
+    ppk_with_multiple_bookingId = profile_df.groupBy("ProvisionalPrimaryKey").agg(F.countDistinct("BookingID").alias("numBookingIds"), F.concat_ws(' | ',F.collect_set("BookingID")).alias("bookingIds")).filter("numBookingIds>1").cache()
+    ppk_with_multiple_bookingId_str = ppk_with_multiple_bookingId.toPandas().to_csv(index=False)
+    LOGGER.info("ccai - ProvisionalPrimaryKey With Multiple Booking Ids : " + str(ppk_with_multiple_bookingId.count()))
+    LOGGER.info("ccai - ProvisionalPrimaryKey With Multiple Booking Ids Df : \n" + ppk_with_multiple_bookingId_str)
+    LOGGER.info("ccai - Null ProvisionalPrimaryKey Records BookingId Count : " + str(profile_df.filter("(ProvisionalPrimaryKey is null) or (ProvisionalPrimaryKey='CCAI_NULL')").select("ProvisionalPrimaryKey","BookingID").dropDuplicates().count()))
+    LOGGER.info("ccai - Null ProvisionalPrimaryKeys Count : " + str(profile_df.select("ProvisionalPrimaryKey").dropDuplicates().count()))
+    
+    ########## CheckPoints-End #############
+
 
     # apply profile schema
     profile_df = profile_df.select(
@@ -1128,6 +1139,18 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     LOGGER.info("ccai - join ciam complete")
     LOGGER.info("ccai - row count : " + str(profile_df.count()))
     LOGGER.info("ccai -> bookingid count - check22 : {}".format(profile_df.select('BookingID').distinct().count()))
+
+    ########### CheckPoints - Start #############
+    bookingIds_after = profile_df.select("ProvisionalPrimaryKey","BookingID").dropDuplicates()
+    lost_bookingIds = bookingIds_before.join(bookingIds_after, ["ProvisionalPrimaryKey","BookingID"],"left_anti").toPandas().to_csv(index=False)
+    LOGGER.info("ccai - Null ProvisionalPrimaryKeys Count : " + str(profile_df.select("ProvisionalPrimaryKey").dropDuplicates().count()))
+    LOGGER.info("ccai - Lost Booking Ids Df : \n" + lost_bookingIds)
+    raise SystemExit(0)
+
+    import sys
+    sys.exit(0)
+    ########## CheckPoints-End #############
+    
     # change 1
 
     profile_df= add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy,archive_date)
