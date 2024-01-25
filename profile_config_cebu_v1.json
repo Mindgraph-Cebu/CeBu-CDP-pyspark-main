@@ -808,6 +808,11 @@
             "columnName": "RecordLocator",
             "dataType": "string",
             "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "Status",
+            "dataType": "integer",
+            "defaultValue": 999
         }
 
 

@@ -855,6 +855,16 @@
             "sourceEntity": "all_bookingpassenger",
             "sourceColumn": "BookingID",
             "targetColumn": "BookingID"
+        },
+        {
+            "sourceEntity": "all_booking",
+            "sourceColumn": "Status",
+            "targetColumn": "Status"
+        },
+        {
+            "sourceEntity": "all_booking",
+            "sourceColumn": "RecordLocator",
+            "targetColumn": "RecordLocator"
         }
     ],
     "attributeMapping": [
@@ -3243,17 +3253,6 @@
             "transformationFunction": "GetAdditionalContactStreetAddress"
         },
         {
-            "attributeName": "RecordLocator",
-            "sourceColumns": [
-                {
-                    "entityName": "all_booking",
-                    "columnName": "RecordLocator"
-                }
-                
-            ],
-            "transformationFunction": "GetRecordLocator"
-        },
-        {
             "attributeName": "IsCsp",
             "sourceColumns": [
                 {
@@ -3287,6 +3286,14 @@
                 {
                     "entityName": "all_voucher",
                     "columnName": "Status"
+                },
+                {
+                    "entityName": "all_voucher",
+                    "columnName": "RecordLocator"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "RecordLocator"
                 }
                 
             ],

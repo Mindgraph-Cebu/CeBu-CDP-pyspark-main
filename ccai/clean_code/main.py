@@ -943,9 +943,7 @@ def transformations(config, profile_df, transaction_dict, spark,LOGGER,partition
                     END AS IsCsp
                 FROM profiles
             """)
-        elif each_transformation["transformationFunction"] == "GetRecordLocator":
-            profile_df = spark.sql("select *, "+each_transformation['sourceColumns'][0]['entityName']+"_" +
-                                   each_transformation['sourceColumns'][0]['columnName']+" as "+each_transformation['attributeName']+" from profiles")
+        
 
     return profile_df
 
@@ -978,6 +976,17 @@ def fillNa(config, profile_df, spark):
         profile_df = profile_df.fillna(each_column['defaultValue'], each_column['columnName'])
     return profile_df
 
+
+# def ignore_bookings(source_dict_copy,profile_df):
+#     booking_df = source_dict_copy["all_booking"].select('BookingID','Status',"RecordLocator")
+#     voucher_df = source_dict_copy["all_voucher"].select('RecordLocator')
+
+#     ignore_bookings_df = booking_df.join(voucher_df,how="left",on="RecordLocator")
+ 
+#     profile_df = profile_df.join(ignore_bookings_df,how="left_anti",on="BookingID")
+#     profile_df = profile_df.drop("*").where("Status = 4")
+
+#     return profile_df
 
 
 def compute_profile(config_path, spark, partition_date, LOGGER):
