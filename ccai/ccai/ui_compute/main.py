@@ -280,10 +280,10 @@ def booker_compute(spark, df, save_path_prefix, LOGGER):
                                 New_Revenue as revenue,
                                 BookingCurrency as currency,
                                 RecordLocator as record_locator,
-                                is_csp
+                                IsCsp
                                 )), 'map<string,string>'))) as Details
     FROM (
-        SELECT PersonID,New_Revenue,TravelDate,BookingDate,TravelOrigin,TravelDestination,TravelDestination,TravelInsurance,TravelBaggage,TravelMeals,BookingCurrency,RecordLocator,is_csp,
+        SELECT PersonID,New_Revenue,TravelDate,BookingDate,TravelOrigin,TravelDestination,TravelDestination,TravelInsurance,TravelBaggage,TravelMeals,BookingCurrency,RecordLocator,IsCsp,
             ROW_NUMBER() OVER (PARTITION BY PersonID ORDER BY TravelDate DESC) AS row_num 
         FROM cdp_profiles
     ) AS subquery 
@@ -380,10 +380,10 @@ def passenger_compute(spark, df, save_path_prefix, LOGGER):
                                 split(BookingDate,' ')[0] as booking_date,
                                 Revenue as revenue,
                                 RecordLocator as record_locator,
-                                is_csp
+                                IsCsp
                                 )), 'map<string,string>'))) as Details
     FROM (
-        SELECT passenger_hash,Revenue,TravelDate,BookingDate,TravelOrigin,TravelDestination,TravelDestination,TravelInsurance,TravelBaggage,TravelMeals,RecordLocator,is_csp,
+        SELECT passenger_hash,Revenue,TravelDate,BookingDate,TravelOrigin,TravelDestination,TravelDestination,TravelInsurance,TravelBaggage,TravelMeals,RecordLocator,IsCsp,
             ROW_NUMBER() OVER (PARTITION BY passenger_hash ORDER BY TravelDate DESC) AS row_num 
         FROM cdp_profiles
     ) AS subquery 
@@ -470,7 +470,7 @@ def compute_ui(config_path, spark, profile_path, LOGGER):
         "TravelSeat",
         "TravelDate",
         "RecordLocator",
-        "is_csp"
+        "IsCsp"
     )
     exchange_rates = {
         "THB": 0.657845,

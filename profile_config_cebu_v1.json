@@ -373,6 +373,28 @@
                 "numberOfPartitions": 1
             },
             "joinColumn": "BookingID"
+        },
+        {
+            "entityName": "all_voucher",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_nonopen/odstest_all_voucher",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "VoucherReference"
         }
         
         
@@ -832,6 +854,16 @@
             "sourceEntity": "all_bookingpassenger",
             "sourceColumn": "BookingID",
             "targetColumn": "BookingID"
+        },
+        {
+            "sourceEntity": "all_booking",
+            "sourceColumn": "RecordLocator",
+            "targetColumn": "RecordLocator"
+        },
+        {
+            "sourceEntity": "all_booking",
+            "sourceColumn": "Status",
+            "targetColumn": "Status"
         }
     ],
     "attributeMapping": [
@@ -3220,12 +3252,8 @@
             "transformationFunction": "GetAdditionalContactStreetAddress"
         },
         {
-            "attributeName": "RecordLocator",
+            "attributeName": "IsCsp",
             "sourceColumns": [
-                {
-                    "entityName": "all_booking",
-                    "columnName": "RecordLocator"
-                },
                 {
                     "entityName": "all_booking",
                     "columnName": "Status"
@@ -3237,11 +3265,40 @@
                 {
                     "entityName": "all_payment",
                     "columnName": "AccountNumber"
+                },
+                {
+                    "entityName": "all_voucher",
+                    "columnName": "VoucherReference"
+                },
+                {
+                    "entityName": "all_voucher",
+                    "columnName": "Amount"
+                },
+                {
+                    "entityName": "all_voucher",
+                    "columnName": "Available"
+                },
+                {
+                    "entityName": "all_voucher",
+                    "columnName": "VoucherBasisCode"
+                },
+                {
+                    "entityName": "all_voucher",
+                    "columnName": "Status"
+                },
+                {
+                    "entityName": "all_voucher",
+                    "columnName": "RecordLocator"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "RecordLocator"
                 }
                 
             ],
-            "transformationFunction": "GetColumns"
+            "transformationFunction": "GetIsCsp"
         }
+        
     ],
     "storageDetails": [
         {

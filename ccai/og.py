@@ -98,7 +98,6 @@ def get_columns_list(config):
     # column_list["all_payment"].append("AuthorizationStatus")
     return column_list
 
-
 def list_folders_in_path(bucket_name, prefix,LOGGER,start_date,end_date):
     s3 = boto3.client('s3')
     available_folders = []
@@ -161,7 +160,6 @@ def get_bucket(config,entityName):
     prefix = '/'.join(path.split("/")[3:-1])+"/"+ path.split("/")[4] + "_" + entityName + "/"
     return bucket,prefix
 
-
 # def load_data(config, partition_date, spark, LOGGER):
 #     column_list = get_columns_list(config)
 #     source_dict = {}
@@ -189,72 +187,6 @@ def get_bucket(config,entityName):
 #     return source_dict
 
 
-
-# def load_data(config, start_date,end_date,spark,LOGGER,partition_date,archive_date):
-
-#     """
-#     Archive , non open and a business date is been loaded 
-#     Date's -
-#                 Archive data date = 2021-01-01
-#                 Business Date(ex) = 2023-07-31
-#                 Non Open = From 2021-01-01 to 2023-07-31
-
-#     """
-
-#     column_list = get_columns_list(config)
-#     source_dict = {}
-#     for each_source in config['entityDetails']:
-#         if each_source['entityType'] == 'snapshot':
-            
-#             # load open partitions - archive and a business date
-#             open_paths = [
-#                 each_source['pathUrl'].replace("nonopen", "open") + "/ods=" + date + "/"
-#                 for date in [partition_date, archive_date]
-#             ]
-
-#             try:
-#                 #try loading both partitions
-#                 source_dict[each_source['entityName']] = spark.read.load(
-#                     open_paths, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-#                 record_count = source_dict[each_source['entityName']].count()
-#                 LOGGER.info("ccai -> Load Data b&a - {} : {} rows".format(each_source['entityName'], record_count))
-#             except:
-#                 #try loading business date partition
-#                 source_dict[each_source['entityName']] = spark.read.load(
-#                     open_paths[0], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-#                 record_count = source_dict[each_source['entityName']].count()
-#                 LOGGER.info("ccai -> Load Data b - {} : {} rows".format(each_source['entityName'], record_count))
-                
-        
-#             #get available non open partitions
-#             bucket,prefix = get_bucket(config,each_source['entityName'])
-#             available_partitions = list_folders_in_path(bucket, prefix,LOGGER,start_date,end_date)
-#             partition_paths = getpaths(available_partitions,each_source['entityName'],each_source['pathUrl'])
-            
-
-#             #load only if partitions are available
-#             if partition_paths:
-#                 ##load non open partitions
-#                 non_open_df = spark.read.load(
-#                     partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').select(column_list[each_source['entityName']])
-#                 source_dict[each_source['entityName']] = source_dict[each_source['entityName']].unionAll(non_open_df)
-
-#                 record_count = non_open_df.count()
-#                 LOGGER.info("ccai -> Load Data non open  - {} : {} rows".format(each_source['entityName'], record_count))
-            
-#             record_count = source_dict[each_source['entityName']].count()
-#             LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
-#             LOGGER.info(f"{each_source['entityName']} loaded successfully")
-
-#             ##<------- open 2023-07-31 -------->##
-#             # source_dict[each_source['entityName']] = spark.read.load(
-#             #         each_source['pathUrl'] + "/" + "ods=2023-07-31", format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-#             # record_count = source_dict[each_source['entityName']].count()
-#             # LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
-
-#     source_dict = filter_tables(config, source_dict,LOGGER)
-
-#     return source_dict 
 
 def load_data(config,spark,LOGGER,partition_date,archive_date):
 
@@ -477,37 +409,47 @@ def join_entities(config, source_dict, spark, LOGGER):
 
     all_fee_debug = source_dict['all_fee'].filter("all_fee_PassengerID is null").limit(10).withColumn("all_fee_Name",F.expr("cast(all_fee_Name as string)")).toPandas().to_csv(index=False)
     LOGGER.info("ccai -> join entities all fee non nulls : " + str(source_dict['all_fee'].filter("all_fee_PassengerID is null").count()))
+    
     # import sys
     # sys.exit("ccai -> all fee debug")
     # join all_booking and all_agent on CreatedUserID and AgentID
     # joined_df = spark.sql("select * from all_booking")
+
     joined_df = spark.sql(
         "select * from all_booking full outer join all_agent on all_booking.all_booking_CreatedUserID <=> all_agent.all_agent_AgentID")
     joined_df.cache()
     joined_df.createOrReplaceTempView("joined_df")
     LOGGER.info("ccai -> Type of joined_df : {}".format( type(joined_df)))
     LOGGER.info("ccai -> join entities - check1 : {}".format( joined_df.count()))
-    
+    joined_df.createOrReplaceTempView("joined_df")
+
     # join all_bookingpassenger on BookingID
+
     joined_df = spark.sql(
         "select * from joined_df left join all_bookingpassenger on joined_df.all_booking_BookingID <=> all_bookingpassenger.all_bookingpassenger_BookingID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check2 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> join entities - check2 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> bookingid count - check2 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
+    distinct_booking = spark.sql(
+            "SELECT COUNT(DISTINCT all_bookingpassenger_BookingID) AS distinct_count FROM joined_df"
+        )
+    result = distinct_booking.first()
+    LOGGER.info("ccai -> all_bookingpassenger distinct booking count after join : {}".format(result.distinct_count))
 
     # join all_person on PersonID
     joined_df = spark.sql(
         "select * from joined_df left join all_person on joined_df.all_agent_PersonID <=> all_person.all_person_PersonID")
     joined_df.createOrReplaceTempView("joined_df")
     # LOGGER.info("ccai -> join entities - check3 : {}".format( joined_df.count()))
-
+    # LOGGER.info("ccai -> bookingid count - check3 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_personname on PersonID
     joined_df = spark.sql(
         "select * from joined_df left join all_personname on joined_df.all_person_PersonID <=> all_personname.all_personname_PersonID")
-    joined_df.cache()
     joined_df.createOrReplaceTempView("joined_df")
     # LOGGER.info("ccai -> join entities - check4 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> bookingid count - check4 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
 
     # join all_personemail on PersonID
@@ -515,110 +457,104 @@ def join_entities(config, source_dict, spark, LOGGER):
         "select * from joined_df left join all_personemail on joined_df.all_person_PersonID <=> all_personemail.all_personemail_PersonID")
     joined_df.createOrReplaceTempView("joined_df")
     # LOGGER.info("ccai -> join entities - check5 : {}".format( joined_df.count()))
-
+    # LOGGER.info("ccai -> bookingid count - check5 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_personphone on PersonID
     joined_df = spark.sql(
         "select * from joined_df left join all_personphone on joined_df.all_person_PersonID <=> all_personphone.all_personphone_PersonID")
     joined_df.createOrReplaceTempView("joined_df")
     # LOGGER.info("ccai -> join entities - check6 : {}".format( joined_df.count()))
-
+    # LOGGER.info("ccai -> bookingid count - check6 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_personaddress on PersonID
     joined_df = spark.sql(
         "select * from joined_df left join all_personaddress on joined_df.all_person_PersonID <=> all_personaddress.all_personaddress_PersonID")
     joined_df.createOrReplaceTempView("joined_df")
     # LOGGER.info("ccai -> join entities - check7 : {}".format( joined_df.count()))
-
+    # LOGGER.info("ccai -> bookingid count - check7 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_traveldoc on PersonID
     joined_df = spark.sql(
         "select * from joined_df left join all_traveldoc on joined_df.all_person_PersonID <=> all_traveldoc.all_traveldoc_PersonID")
     joined_df.createOrReplaceTempView("joined_df")
     # LOGGER.info("ccai -> join entities - check8 : {}".format( joined_df.count()))
-
+    # LOGGER.info("ccai -> bookingid count - check8 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join GetPassportNumber_all_traveldoc on PersonID
     joined_df = spark.sql(
         "select * from joined_df left join GetPassportNumber_all_traveldoc on joined_df.all_person_PersonID <=> GetPassportNumber_all_traveldoc.GetPassportNumber_all_traveldoc_PersonID")
     joined_df.createOrReplaceTempView("joined_df")
-    # joined_df.cache()
+    joined_df.cache()
     # LOGGER.info("ccai -> join entities - check9 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> bookingid count - check9 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     joined_df = spark.sql(
         "select * from joined_df left join all_payment on joined_df.all_booking_BookingID <=> all_payment.all_payment_BookingID")
-    
     joined_df.createOrReplaceTempView("joined_df")
     # LOGGER.info("ccai -> join entities - check10 : {}".format( joined_df.count()))
-
-    ##### voucher join 
-
-    joined_df = spark.sql(
-        "select * from joined_df left join all_voucher on joined_df.all_payment_AccountNumber <=> all_voucher.all_voucher_VoucherReference")
-    # joined_df.cache()
-    joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check11 : {}".format( joined_df.count()))
-
+    # LOGGER.info("ccai -> bookingid count - check10 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
     # join all_bookingcontact on BookingID
     joined_df = spark.sql(
         "select * from joined_df left join all_bookingcontact on joined_df.all_booking_BookingID <=> all_bookingcontact.all_bookingcontact_BookingID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check12 : {}".format( joined_df.count()))
-
+    # LOGGER.info("ccai -> join entities - check11 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> bookingid count - check11 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join GetTravelSoloOrGroup_all_bookingpassenger on BookingID
     joined_df = spark.sql("select * from joined_df left join GetTravelSoloOrGroup_all_bookingpassenger on joined_df.all_booking_BookingID <=> GetTravelSoloOrGroup_all_bookingpassenger.GetTravelSoloOrGroup_all_bookingpassenger_BookingID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check13 : {}".format( joined_df.count()))
-
+    # LOGGER.info("ccai -> join entities - check12 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> bookingid count - check12 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_passengeraddress on PassengerID
     joined_df = spark.sql(
         "select * from joined_df left join all_passengeraddress on joined_df.all_bookingpassenger_PassengerID <=> all_passengeraddress.all_passengeraddress_PassengerID")
-    # joined_df.cache()
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check14 : {}".format( joined_df.count()))
-
+    # LOGGER.info("ccai -> join entities - check13 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> bookingid count - check13 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_passengertraveldoc on PassengerID
     joined_df = spark.sql(
         "select * from joined_df left join all_passengertraveldoc on joined_df.all_bookingpassenger_PassengerID <=> all_passengertraveldoc.all_passengertraveldoc_PassengerID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check15 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> join entities - check14 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> bookingid count - check14 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join GetPassportNumber_all_passengertraveldoc on PassengerID
     joined_df = spark.sql("select * from joined_df left join GetPassportNumber_all_passengertraveldoc on joined_df.all_bookingpassenger_PassengerID <=> GetPassportNumber_all_passengertraveldoc.GetPassportNumber_all_passengertraveldoc_PassengerID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check16 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> join entities - check15 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> bookingid count - check15 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_passengerjourneysegment on PassengerID
     joined_df = spark.sql(
         "select * from joined_df left join all_passengerjourneysegment on joined_df.all_bookingpassenger_PassengerID <=> all_passengerjourneysegment.all_passengerjourneysegment_PassengerID")
-    # joined_df.cache()
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check17 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> join entities - check16 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> bookingid count - check16 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
 
     # join GetTravelDestination_all_passengerjourneysegment on PassengerID
     joined_df = spark.sql("select * from joined_df left join GetTravelDestination_all_passengerjourneysegment on joined_df.all_bookingpassenger_PassengerID <=> GetTravelDestination_all_passengerjourneysegment.GetTravelDestination_all_passengerjourneysegment_PassengerID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check18 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> join entities - check17 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> bookingid count - check17 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
 
     # join all_passengerjourneyleg on PassengerID
     joined_df = spark.sql(
         "select * from joined_df left join all_passengerjourneyleg on joined_df.all_bookingpassenger_PassengerID <=> all_passengerjourneyleg.all_passengerjourneyleg_PassengerID")
-    joined_df.cache()
     joined_df.createOrReplaceTempView("joined_df")
-
-    # LOGGER.info("ccai -> join entities - check19 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> join entities - check18 : {}".format( joined_df.count()))
+    # LOGGER.info("ccai -> bookingid count - check18 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join all_fee on PassengerID
     joined_df = spark.sql(
         "select * from joined_df left join all_fee on joined_df.all_bookingpassenger_PassengerID <=> all_fee.all_fee_PassengerID")
     joined_df.cache()
     joined_df.createOrReplaceTempView("joined_df")
-    LOGGER.info("ccai -> join entities - check20 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> join entities - check19 : {}".format( joined_df.count()))
+    LOGGER.info("ccai -> bookingid count - check19 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
 
     return joined_df
@@ -827,7 +763,6 @@ def master_profile_merge(config, profile_df, master_tables, source_dict, spark):
 
     profile_df.createOrReplaceTempView("profiles")
     return profile_df
-
 
 def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partition_date,source_dict_copy):
     LOGGER.info("ccai - transformations - start")
@@ -1102,21 +1037,7 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
             query = each_transformation['sourceColumns'][0]['entityName']+"_" + each_transformation['sourceColumns'][0]['columnName']+" as "+each_transformation['attributeName']
             new_column_queries.append(query)
         # print(each_transformation)
-        elif each_transformation["transformationFunction"] == "GetIsCsp":
-            query = """
-                    CASE
-                        WHEN all_payment_PaymentMethodCode = 'VO'
-                            AND all_voucher_Amount > all_voucher_Available
-                            AND all_booking_Status IN (2, 3)
-                            AND all_payment_AuthorizationStatus = 4
-                            AND all_voucher_Status = 1
-                            AND all_voucher_VoucherBasisCode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5')
-                            AND CAST(all_booking_BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE)
-                        THEN 'yes'
-                        ELSE 'no'
-                    END AS IsCsp
-                    """
-            new_column_queries.append(query)
+
 
     profile_df = spark.sql("""select *, {} from profiles""".format(", ".join(new_column_queries)))
     profile_df.cache()
@@ -1130,19 +1051,24 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
 #         profile_df.createOrReplaceTempView("profiles")
 #         profile_df = spark.sql("select *, " + each_column['sourceEntity'] + "_" +
 #                                each_column['sourceColumn'] + " as " + each_column['targetColumn'] + " from profiles")
-
+        
 #     for each_transformation in config["attributeMapping"]:
 #         profile_df.createOrReplaceTempView("profiles")
 #         if each_transformation['transformationFunction'] == 'GetTravelSoloOrGroup':
 #             profile_df = spark.sql("select *,GetTravelSoloOrGroup_all_bookingpassenger_TravelSoloOrGroup  as " +
 #                                    each_transformation['attributeName'] + " from profiles")
+            
 
 #         elif each_transformation['transformationFunction'] == 'GetPersonID':
 #             profile_df = spark.sql("select *,all_person_PersonID as " +
 #                                    each_transformation['attributeName'] + " from profiles")
+            
+
 #         elif each_transformation['transformationFunction'] == 'GetProvisionalPrimaryKey':
 #             profile_df = spark.sql("select *,concat(all_bookingpassenger_PassengerID,'_',all_person_PersonID) as " +
 #                                    each_transformation['attributeName'] + " from profiles")
+            
+
 #         elif each_transformation['transformationFunction'] == 'GetIsRegistered':
 #             profile_df = spark.sql("""
 #                 select *, 
@@ -1156,9 +1082,13 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
 #                     end
 #                 end as """+each_transformation['attributeName']+""" from profiles
 #                 """)
+           
+
 #         elif each_transformation['transformationFunction'] == 'GetDetails':
 #             profile_df = spark.sql("select *,case when IsRegistered = 'Yes' then " +
 #                                    each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + " else " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " end as " + each_transformation['attributeName'] + " from profiles")
+            
+
 #         elif each_transformation['transformationFunction'] == 'GetDetailsPhone':
 #             # map[map_keys(map)[0]]
 #             personphonecolname = each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + \
@@ -1167,6 +1097,8 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
 #                 each_transformation['sourceColumns'][1]['columnName']+")[0]]"
 #             profile_df = spark.sql("select *, case when IsRegistered = 'Yes' then " +
 #                                    personphonecolname + " else " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " end as " + each_transformation['attributeName'] + " from profiles")
+            
+
 #         elif each_transformation['transformationFunction'] == 'GetPassportNumber':
 #             passcol = each_transformation['transformationFunction'] + "_" + \
 #                 each_transformation['sourceColumns'][0]['entityName'] + \
@@ -1176,6 +1108,8 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
 #                 "_" + each_transformation['sourceColumns'][1]['columnName']
 #             profile_df = spark.sql("select *, case when IsRegistered = 'Yes' then " +
 #                                    personcol + " else " + passcol + " end as " + each_transformation['attributeName'] + " from profiles")
+           
+
 #         elif each_transformation['transformationFunction'] == 'GetStreetAddress':
 #             passcols = ", ".join([each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'],
 #                                   each_transformation['sourceColumns'][1]['entityName'] +
@@ -1192,35 +1126,47 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
 #                                     each_transformation['sourceColumns'][5]['entityName'] + "_" + each_transformation['sourceColumns'][5]['columnName']])
 #             profile_df = spark.sql("select *, case when IsRegistered = 'Yes' then " +
 #                                    "concat_ws(' ', " + personcols + ") else concat_ws(' ', " + passcols + ") end as " + each_transformation['attributeName'] + " from profiles")
+            
+
 #         elif each_transformation['transformationFunction'] == 'GetGoIdFun':
 #             profile_df = spark.sql("select *, case when IsRegistered = 'Yes' then " +
 #                                    each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + "['OAFF'] else " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + "['OAFF'] end as " + each_transformation['attributeName'] + " from profiles")
+            
+
 #         elif each_transformation['transformationFunction'] == 'GetSeniorCitizenID':
 #             profile_df = spark.sql("select *, case when IsRegistered = 'Yes' then " +
 #                                    each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + "['S'] else " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + "['S'] end as " + each_transformation['attributeName'] + " from profiles")
+            
+
 #         elif each_transformation['transformationFunction'] == 'GetBookedByAgentID' or each_transformation['transformationFunction'] == 'GetTravelSeat':
 #             profile_df = spark.sql("select *, " +
 #                                    each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " as " +
 #                                    each_transformation['attributeName'] + " from profiles")
+            
+
 #         elif each_transformation['transformationFunction'] == 'GetTravelOriginAndDate':
 #             profile_df = spark.sql("select *, " +
 #                                    each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " as " +
 #                                    each_transformation['attributeName'] + " from profiles")
+            
+
 #         elif each_transformation['transformationFunction'] == 'GetTravelBaggageMealsInsurance':
 #             col_name = each_transformation['sourceColumns'][0]['entityName'] + \
 #                 "_" + each_transformation['sourceColumns'][0]['columnName']
 #             # pull value from col_name if any of the keys BAG10, BAG15, BAG20, BAG25, BAG30, BAG32, BAG35, BAG40, BAG45
 #             if each_transformation['attributeName'] == 'TravelBaggage':
+#                 # key_list_df = source_dict_copy["all_passengerfee"].select("Feecode").dropDuplicates().join(source_dict_copy["all_fee"].select("Feecode").dropDuplicates(), "FeeCode", "left")
 
-#                 key_list_df = source_dict_copy["all_passengerfee"].join(source_dict_copy["all_fee"], "FeeCode", "left")
+#                 # key_list_df = key_list_df.select("FeeCode")
 
-#                 key_list_df = key_list_df.select("FeeCode")
+#                 # key_list_df = key_list_df.filter((key_list_df["FeeCode"].like("%BAG%")) | (key_list_df["FeeCode"].like("%PC20%") | (key_list_df["FeeCode"].like("%PC32%"))))
 
-#                 key_list_df = key_list_df.filter((key_list_df["FeeCode"].like("%BAG%")) | (key_list_df["FeeCode"].like("%PC20%") | (key_list_df["FeeCode"].like("%PC32%"))))
+#                 # key_list_df=key_list_df.select(key_list_df.FeeCode).distinct()
+#                 # # Collect the matching values into a list
+#                 # key_list = key_list_df.select("FeeCode").rdd.map(lambda row: row[0]).collect()
+#                 key_list =['BAG35', 'BAG45', 'EXSBAG', 'PC32', 'BAG10', 'IBAG', 'XBAG', 'BAG25', 'BAGPRO', 'BAG32', 'PC20', 'XNBAG', 'PBAG',
+#                             'BAG30', 'GBAG', 'FLYBAG', 'BAG40', 'BAG20', 'OVSBAG', 'APTBAG', 'BAG15']
 
-#                 key_list_df=key_list_df.select(key_list_df.FeeCode).distinct()
-#                 # Collect the matching values into a list
-#                 key_list = key_list_df.select("FeeCode").rdd.map(lambda row: row[0]).collect()
 #             elif each_transformation['attributeName'] == 'TravelMeals':
 #                 # MEAL, MEAL1, MEAL2, MEAL3, MEAL4, MEAL5
 #                 key_list = ['MEAL', 'MEAL1', 'MEAL2',
@@ -1241,24 +1187,30 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
 #             sub_query += "else null end as " + \
 #                 each_transformation['attributeName'] + " from profiles"
 #             profile_df = spark.sql(sub_query)
+            
+
 
 #         elif each_transformation['transformationFunction'] == 'GetTravelGetGoKeyedIn':
 #             # select OAFF key
 #             profile_df = spark.sql("select *, " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns']
 #                                    [0]['columnName'] + "['OAFF'] as " + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetIsPassenger':
 #             # if PassengerID is not null then yes else no
 #             profile_df = spark.sql("select *, case when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns']
 #                                    [0]['columnName'] + " is not null then 'Yes' else 'No' end as " + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetIsEmployee':
 #             # if IsRegistered = 'No' then if CEB is not null in Passcol then yes else if CEB is not null in personcolumn then yes else no
 #             profile_df = spark.sql("""select *, case when IsRegistered = 'No' then
 #             case when """ + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + """['CEB'] is not null then 'Yes'
 #             else case when """ + each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + """['CEB'] is not null then 'Yes'
 #             else 'No' end end else 'No' end as """ + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetTravelDestination':
 #             profile_df = spark.sql("select *, GetTravelDestination_" + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns']
 #                                    [0]['columnName'] + " as " + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetIsEmployeeDependent':
 #             # if Firstname is equal to passcol1['CEB'] and LastName is equal to passcol2['CEB'] then yes else no
 #             profile_df = spark.sql("""select *, case when IsRegistered = 'No' then
@@ -1266,79 +1218,74 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
 #             else case when """ + each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + """['CEBD'] is not null then 'Yes'
 #             else 'No' end end else 'No' end as """ + each_transformation['attributeName'] + " from profiles")
 #             LOGGER.info("GetIsEmployeeDependent completed")
+            
 #         elif each_transformation['transformationFunction'] == 'GetBookerDetails':
 #             profile_df = spark.sql("select *, " +
 #                                    each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " as " +
 #                                    each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetBookerPassportNumber':
 #             col = "GetPassportNumber_" + \
 #                 each_transformation['sourceColumns'][0]['entityName'] + \
 #                 "_" + each_transformation['sourceColumns'][0]['columnName']
 #             profile_df = spark.sql("select *, " + col + " as " +
 #                                    each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetBookerType':
 #             # if col is 0 then None, if col is 1 then Customer, if col is 2 then Agent else null
 #             profile_df = spark.sql("""select *, case when """ + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + """ = 0 then 'None' when """ + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns']
 #                                    [0]['columnName'] + """ = 1 then 'Customer' when """ + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + """ = 2 then 'Agent' else null end as """ + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetBookerMobile':
 #             # get col['M']
 #             profile_df = spark.sql("select *, " + each_transformation['sourceColumns'][0]['entityName'] + "_" +
 #                                    each_transformation['sourceColumns'][0]['columnName'] + "['M'] as " + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetBookerHomePhone':
 #             # get col['H']
 #             profile_df = spark.sql("select *, " + each_transformation['sourceColumns'][0]['entityName'] + "_" +
 #                                    each_transformation['sourceColumns'][0]['columnName'] + "['H'] as " + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetBookerStreetAddress':
 #             # concat_ws col1, col2, col3
 #             profile_df = spark.sql("select *, concat_ws(', ', " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + ", " + each_transformation['sourceColumns'][1]['entityName'] + "_" +
 #                                    each_transformation['sourceColumns'][1]['columnName'] + ", " + each_transformation['sourceColumns'][2]['entityName'] + "_" + each_transformation['sourceColumns'][2]['columnName'] + ") as " + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetBookerGetGoID':
 #             # get col['GG']
 #             profile_df = spark.sql("select *, " + each_transformation['sourceColumns'][0]['entityName'] + "_" +
 #                                    each_transformation['sourceColumns'][0]['columnName'] + "['GG'] as " + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetPrimaryNames':
 #             # get col['P']
 #             profile_df = spark.sql("select *, " + each_transformation['sourceColumns'][0]['entityName'] + "_" +
 #                                    each_transformation['sourceColumns'][0]['columnName'] + "['P'] as " + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetAdditionalNames':
 #             # get col['W']
 #             profile_df = spark.sql("select *, " + each_transformation['sourceColumns'][0]['entityName'] + "_" +
 #                                    each_transformation['sourceColumns'][0]['columnName'] + "['W'] as " + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetPrimaryContactStreetAddress':
 #             # concat_ws col1['P'], col2['P'], col3['P']
 #             profile_df = spark.sql("select *, concat_ws(', ', " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + "['P'], " + each_transformation['sourceColumns'][1]['entityName'] + "_" +
 #                                    each_transformation['sourceColumns'][1]['columnName'] + "['P'], " + each_transformation['sourceColumns'][2]['entityName'] + "_" + each_transformation['sourceColumns'][2]['columnName'] + "['P']) as " + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetAdditionalContactStreetAddress':
 #             # concat_ws col1['W'], col2['W'], col3['W']
 #             profile_df = spark.sql("select *, concat_ws(', ', " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + "['W'], " + each_transformation['sourceColumns'][1]['entityName'] + "_" +
 #                                    each_transformation['sourceColumns'][1]['columnName'] + "['W'], " + each_transformation['sourceColumns'][2]['entityName'] + "_" + each_transformation['sourceColumns'][2]['columnName'] + "['W']) as " + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation['transformationFunction'] == 'GetBookingChannel':
 #             # if col = 0 then Default if col = 1 then Direct if col = 2 then Web if col = 3 then GDS if col = 4 then API
 #             profile_df = spark.sql("select *, case when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 0 then 'Default' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 1 then 'Direct' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" +
 #                                    each_transformation['sourceColumns'][0]['columnName'] + " = 2 then 'Web' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 3 then 'GDS' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 4 then 'API' end as " + each_transformation['attributeName'] + " from profiles")
+            
 #         elif each_transformation["transformationFunction"] == "GetPaymentMethodCode":
 #             profile_df = spark.sql("select *, "+each_transformation['sourceColumns'][0]['entityName']+"_" +
 #                                    each_transformation['sourceColumns'][0]['columnName']+" as "+each_transformation['attributeName']+" from profiles")
+            
 #         # print(each_transformation)
-#         elif each_transformation["transformationFunction"] == "GetIsCsp":
-#             profile_df = spark.sql(""" 
-#                 SELECT 
-#                     *,
-#                     CASE
-#                         WHEN all_payment_PaymentMethodCode = 'VO'
-#                             AND all_voucher_Amount > all_voucher_Available
-#                             AND all_booking_Status IN (2, 3)
-#                             AND all_payment_AuthorizationStatus = 4
-#                             AND all_voucher_Status = 1
-#                             AND all_voucher_VoucherBasisCode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5')
-#                             AND CAST(all_booking_BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE)
-#                         THEN 'yes'
-#                         ELSE 'no'
-#                     END AS IsCsp
-#                 FROM profiles
-#             """)
-        
-
 #     return profile_df
 
 def join_ciam(config,profile_df,spark, partition_date,LOGGER):
@@ -1371,11 +1318,78 @@ def fillNa(config, profile_df, spark):
     return profile_df
 
 
+#change 2
+
+
+# def get_df(config,spark,partition_date,archive_date,LOGGER):
+#         # load open partitions - archive and a business date
+#     open_dates = [partition_date,archive_date]
+
+#     open_paths = []
+#     for date in open_dates:
+#         path = config["voucherPath"].replace("nonopen","open") + "/ods=" + date + "/"
+#         open_paths.append(path)
+
+#     try:
+#         #try loading both partitions
+#         voucher_df = spark.read.load(
+#             open_paths, format="orc")
+#     except:
+#         #try loading business date partition
+#         voucher_df = spark.read.load(
+#             open_paths[0], format="orc")
+        
+
+#     #get available non open partitions
+#     bucket,prefix = get_bucket(config,"all_voucher")
+#     available_partitions = list_folders_in_path(bucket, prefix,LOGGER,archive_date,partition_date)
+#     partition_paths = getpaths(available_partitions,"all_voucher",config["voucherPath"])
+
+
+#     #load only if partitions are available
+#     if partition_paths:
+#         ##load non open partitions
+#         non_open_df = spark.read.load(
+#             partition_paths, format="orc").where('c_operationtype = "D"')
+#         voucher_df = voucher_df.unionAll(non_open_df)
+
+#     record_count = voucher_df.count()
+#     LOGGER.info("ccai -> Load Data - {} : {} rows".format("voucher_df", record_count))
+#     LOGGER.info("voucher_df loaded successfully")
+
+
+
+#     return voucher_df
+
+
+def add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy,archive_date):
+
+    LOGGER.info("ccai - Processing CSP transactions")
+    source_dict_copy["all_booking"].createOrReplaceTempView("booking")
+    source_dict_copy["all_payment"].createOrReplaceTempView("payment")
+    source_dict_copy["all_payment"].createOrReplaceTempView("voucher")
+
+    query = "SELECT DISTINCT b.BookingID FROM booking b INNER JOIN payment p ON b.BookingID = p.BookingID AND p.PaymentMethodCode = 'VO' INNER JOIN voucher v ON v.VoucherReference = p.AccountNumber AND v.Amount > v.Available WHERE CAST(b.BookingUTC AS date) <= CAST(DATE_ADD(current_timestamp(), -1) AS DATE) AND b.status IN (2,3) AND v.voucherbasiscode IN ('99PHP', '99CSP2', '99CSP3', '99CSP4', '99CSP5') AND p.AuthorizationStatus = 4 AND v.status = 1;"
+    csp_df = spark.sql(query)
+
+    LOGGER.info("ccai - csp row count : " + str(csp_df.count()))
+
+    csp_df = csp_df.withColumn("IsCsp", when(col("BookingID").isNotNull(), "yes").otherwise("no"))
+    LOGGER.info("ccai - csp row count : " + str(csp_df.count()))
+
+    profile_df = profile_df.join(csp_df,on="BookingID",how="left")
+    #LOGGER.info("ccai - profile row count after csp join: " + str(profile_df.count()))
+    profile_df = profile_df.withColumn("IsCsp", when(col("IsCsp") == 'yes', "yes").otherwise("no"))
+    LOGGER.info("ccai - csp_check: " + str(profile_df.where("IsCsp = 'yes'").count()))
+    
+    return profile_df 
+
+
+
 def ignore_bookings(source_dict_copy, profile_df, LOGGER):
     booking_df = source_dict_copy["all_booking"].select('BookingID', "RecordLocator")
     voucher_df = source_dict_copy["all_voucher"].select('RecordLocator')
 
-    profile_df.cache()
     initial_row_count = profile_df.count()
     LOGGER.info("ccai - profile row count: {}".format(initial_row_count))
 
@@ -1383,7 +1397,6 @@ def ignore_bookings(source_dict_copy, profile_df, LOGGER):
 
     profile_df = profile_df.join(ignore_bookings_df, how="left_anti", on="BookingID")
 
-    
     final_row_count_before_status_filter = profile_df.count()
     ignored_count = initial_row_count - final_row_count_before_status_filter
 
@@ -1402,20 +1415,27 @@ def ignore_bookings(source_dict_copy, profile_df, LOGGER):
     return profile_df
 
 
+
 def compute_profile(config_path, spark, partition_date, LOGGER):
     spark_conf(spark)
     LOGGER.info("ccai - ConfigPath : " + str(config_path))
     config = get_config(config_path)
     archive_date = "2021-01-01"
     LOGGER.info("ccai - profile loading complete")
-    source_dict  = load_data(config, spark,LOGGER,partition_date,archive_date)
+    source_dict= load_data(config, spark,LOGGER,partition_date,archive_date)
     LOGGER.info("ccai - data loading complete")
+    # LOGGER.info("ccai -> bookingid count after load data : {}".format(source_dict['all_booking'].select('BookingID').distinct().count()))
+    
     source_dict_copy = source_dict.copy()
     source_dict = derived_tables(config, source_dict, spark, LOGGER)
     LOGGER.info("ccai - derived tables complete")
+    # LOGGER.info("ccai -> bookingid count after derived tables : {}".format(source_dict['all_booking'].select('BookingID').distinct().count()))
     source_dict, transaction_dict = transaction_conversion(
         config, source_dict, spark, LOGGER)
     LOGGER.info("ccai - transaction conversion complete")
+    # LOGGER.info("ccai -> bookingid count aftertransaction conversion : {}".format(source_dict['all_booking'].select('BookingID').distinct().count()))
+
+
     joined_df = join_entities(config, source_dict, spark, LOGGER)
     LOGGER.info("ccai - join entities complete")
 
@@ -1423,11 +1443,17 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     LOGGER.info("ccai - create profile complete")
 
     # profile_df = joined_df.join(profile_df, joined_df.all_bookingpassenger_PassengerID == profile_df.PassengerID, "left_outer")
-
     profile_df = transformationsNew(config, joined_df, transaction_dict, spark,LOGGER,partition_date,source_dict_copy)
     profile_df.cache()
     LOGGER.info("ccai - transformations complete")
     LOGGER.info("ccai - row count : " + str(profile_df.count()))
+
+
+
+    # profile_df = profile_df.withColumnRenamed('all_booking_RecordLocator','RecordLocator')
+    # profile_df = profile_df.withColumnRenamed('all_booking_Status','Status')
+
+    
 
     profile_df = profile_df.select(profile_column_list)
     LOGGER.info("ccai - profile column subsetting complete")
@@ -1437,7 +1463,18 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     profile_df = profile_atomic_transformation(config, profile_df, spark)
     LOGGER.info("ccai - atomic transformation complete")
     LOGGER.info("ccai - row count : " + str(profile_df.count()))
+    # LOGGER.info("ccai -> bookingid count - check21 : {}".format(profile_df.select('BookingID').distinct().count()))
 
+    ########### CheckPoints - Start #############
+    # bookingIds_before = profile_df.select("ProvisionalPrimaryKey","BookingID").dropDuplicates().cache()
+    # ppk_with_multiple_bookingId = profile_df.groupBy("ProvisionalPrimaryKey").agg(F.countDistinct("BookingID").alias("numBookingIds"), F.concat_ws(' | ',F.collect_set("BookingID")).alias("bookingIds")).filter("numBookingIds>1").cache()
+    # ppk_with_multiple_bookingId_str = ppk_with_multiple_bookingId.toPandas().to_csv(index=False)
+    # LOGGER.info("ccai - ProvisionalPrimaryKey With Multiple Booking Ids : " + str(ppk_with_multiple_bookingId.count()))
+    # LOGGER.info("ccai - ProvisionalPrimaryKey With Multiple Booking Ids Df : \n" + ppk_with_multiple_bookingId_str)
+    # LOGGER.info("ccai - Null ProvisionalPrimaryKey Records BookingId Count : " + str(profile_df.filter("(ProvisionalPrimaryKey is null) or (ProvisionalPrimaryKey='CCAI_NULL')").select("ProvisionalPrimaryKey","BookingID").dropDuplicates().count()))
+    # LOGGER.info("ccai - Null ProvisionalPrimaryKeys Count : " + str(profile_df.select("ProvisionalPrimaryKey").dropDuplicates().count()))
+    
+    ########## CheckPoints-End #############
 
 
     # apply profile schema
@@ -1449,23 +1486,40 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     profile_df = profile_df.groupBy("ProvisionalPrimaryKey").agg(*col_list)
     profile_df.cache()
     LOGGER.info("ccai - Profile DF groupby Agg ")
-
+    # LOGGER.info("ccai -> bookingid count - check21 : {}".format(profile_df.select('BookingID').distinct().count()))
     LOGGER.info("ccai - profile row count : " + str(profile_df.count()))
 
     profile_df = fillNa(config, profile_df, spark)
     profile_df = join_ciam(config, profile_df, spark, partition_date,LOGGER)
     LOGGER.info("ccai - join ciam complete")
     LOGGER.info("ccai - row count : " + str(profile_df.count()))
+    # LOGGER.info("ccai -> bookingid count - check22 : {}".format(profile_df.select('BookingID').distinct().count()))
+
+    ########### CheckPoints - Start #############
+    # bookingIds_after = profile_df.select("ProvisionalPrimaryKey","BookingID").dropDuplicates()
+    # lost_bookingIds = bookingIds_before.join(bookingIds_after, ["ProvisionalPrimaryKey","BookingID"],"left_anti").toPandas().to_csv(index=False)
+    # LOGGER.info("ccai - Null ProvisionalPrimaryKeys Count : " + str(profile_df.select("ProvisionalPrimaryKey").dropDuplicates().count()))
+    # LOGGER.info("ccai - Lost Booking Ids Df : \n" + lost_bookingIds)
+    # raise SystemExit(0)
+
+    # import sys
+    # sys.exit(0)
+    ########## CheckPoints-End #############
     
+    # change 1
     profile_df = profile_df.dropDuplicates(subset=["PassengerID"])
-    LOGGER.info("ccai - profile row count after dropping duplicates *passengerID* : " + str(profile_df.count()))
+    LOGGER.info("ccai - profile row count: " + str(profile_df.count()))
 
-    profile_df = ignore_bookings(source_dict_copy, profile_df, LOGGER)
-    LOGGER.info("ccai - ignore booking complete")
-    LOGGER.info("ccai - profile row count : " + str(profile_df.count()))
+    profile_df = add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy,archive_date)
+    LOGGER.info(f"ccai csp attribute added")
+    
+    profile_df = ignore_bookings(source_dict_copy, profile_df,LOGGER)
+    LOGGER.info(f"bookings ignored")
+    LOGGER.info("ccai - profile row count: " + str(profile_df.count()))
 
+
+    
     profile_df.cache()
-
     save_path = config['storageDetails'][0]['pathUrl']
     ucp_path = config['storageDetails'][2]['pathUrl'] + \
         "/" + "p_date=" + partition_date

@@ -24,7 +24,7 @@ from pyspark.sql.functions import udf
 from datetime import datetime as dt
 
 def get_config(file_path):
-    # file_path = "s3a://cebu-cdp-data-qa/script/glue/cebu-cdp-profile-glue/profile_config_cebu_v1.json"
+    # file_path = "s3a://cebu-cdp-data-dev/script/glue/cebu-cdp-profile-glue/profile_config_cebu_v1.json"
     bucket_name = file_path.split("/")[2]
     key = "/".join(file_path.split("/")[3:])
     s3 = boto3.client("s3")
