@@ -453,11 +453,11 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
     edge_case_condition = "( (pfirstname in ('TV')) and (plastname in ('TV','PX')) )"
     ignored_profiles = df.filter(edge_case_condition)
     df = df.filter("not " + edge_case_condition)
-    ignored_profiles.write.mode("overwrite").parquet("s3a://cebu-cdp-data-dev/ignored_profiles/archieve_data/")
-    disp_str = spark.read.parquet("s3a://cebu-cdp-data-dev/ignored_profiles/archieve_data/").limit(10).drop("passengerid_list").toPandas().to_csv(index=False)
+    ignored_profiles.write.mode("overwrite").parquet(config["storageDetails"][4]["pathUrl"])
+    disp_str = spark.read.parquet(config["storageDetails"][4]["pathUrl"]).limit(10).drop("passengerid_list").toPandas().to_csv(index=False)
     LOGGER.info("ccai - *************************************")
     LOGGER.info("ccai - ignored profiles rows df count : " + str (df.count()))
-    LOGGER.info("ccai - ignored profiles rows : " + str (spark.read.parquet("s3a://cebu-cdp-data-dev/ignored_profiles/archieve_data/").count()))
+    LOGGER.info("ccai - ignored profiles rows : " + str (spark.read.parquet(config["storageDetails"][4]["pathUrl"]).count()))
     LOGGER.info("ccai - df -> "+str(disp_str))
 
     crossjoin = """

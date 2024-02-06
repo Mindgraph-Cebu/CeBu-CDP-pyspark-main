@@ -106,19 +106,14 @@ def list_folders_in_path(bucket_name, prefix,LOGGER,start_date,end_date):
     return available_partitions
 
 
-# def getpaths(available_partitions,entityName,path_url):
-#     path = "/".join(path_url.split("/")[:7]) + "/" + path_url.split("/")[4] + "_" + entityName + "/nds="
-#     partition_paths = []
-            
-#     for date in available_partitions:
-#         available_path = path + date + "/"
-#         partition_paths.append(available_path)
 
-#     return partition_paths
+
+# def getpaths(available_partitions, entityName, path_url):
+#     base_path = "/".join(path_url.split("/")[:7]) + "/" + path_url.split("/")[4] + "_" + entityName + "/nds="
+#     return [base_path + date + "/" for date in available_partitions]
 
 def getpaths(available_partitions, entityName, path_url):
-    base_path = "/".join(path_url.split("/")[:7]) + "/" + path_url.split("/")[4] + "_" + entityName + "/nds="
-    return [base_path + date + "/" for date in available_partitions]
+    return [path_url + "/nds=" + date + "/" for date in available_partitions]
 
 
 def get_bucket(config,entityName):

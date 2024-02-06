@@ -3328,6 +3328,13 @@
             "fileSystem": "s3",
             "pathUrl": "s3a://cebu-cdp-data-dev/ui",
             "storageHandler": "PersistHadoopFS"
+        },
+        {
+            "recordType": "ignored_profiles",
+            "dataFormat": "parquet",
+            "fileSystem": "s3",
+            "pathUrl": "s3a://cebu-cdp-data-dev/ignored_profiles/archieve_data/",
+            "storageHandler": "PersistHadoopFS"
         }
     ],
     "ciamPath": "s3a://edw-dl-process-data-dev/data/ciam/hdata/ciam_all_diffen_nonopen/ciam_all_edwcustomer",
