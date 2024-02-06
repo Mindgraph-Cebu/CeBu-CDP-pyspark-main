@@ -245,7 +245,7 @@ def derived_tables(config, source_dict, spark, LOGGER):
         "GetPassportNumber_all_traveldoc": ["SELECT all_traveldoc.PersonID AS PersonID, all_traveldoc.DocNumber AS DocNumber, all_traveldoc.IssuedByCode AS IssuedByCode, all_traveldoc.ExpirationDate AS ExpirationDate FROM all_traveldoc WHERE upper(all_traveldoc.DocTypeCode) = 'P' AND (all_traveldoc.PersonID, all_traveldoc.ExpirationDate) IN ( SELECT all_traveldoc.PersonID AS PersonID, max(all_traveldoc.ExpirationDate) AS maxExpirationDate FROM all_traveldoc where upper(all_traveldoc.DocTypeCode) = 'P' GROUP BY all_traveldoc.PersonID)"],
         "all_fee": ["select all_passengerfee.PassengerID,all_passengerfee.FeeCode, all_fee.Name from all_passengerfee left join all_fee on all_passengerfee.FeeCode = all_fee.FeeCode"],
         "all_passengerjourneysegment": ["select * from all_passengerjourneysegment where JourneyNumber = 1"],
-        "GetTravelSoloOrGroup_all_bookingpassenger": ["select BookingID, case when count(distinct PassengerID) > 1 then 'Group' else 'Solo' end as TravelSoloOrGroup from all_bookingpassenger group by BookingID"],
+        "GetTravelSoloOrGroup_all_bookingpassenger": ["select BookingID, case when count(distinct PassengerID) > 1 then 'Group' else 'Solo' end as TravelSoloOrGroup from all_bookingpassenger group by BookingID"]
         # filtering out status 4 booking id
         # "all_booking" : ["select * from all_booking where Status != 4"]
     }
