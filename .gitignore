@@ -9,3 +9,5 @@ ccai/dist
 ccai_cdp_env/
 *.pyc
 ccai/venv*/
+dist
+venv
