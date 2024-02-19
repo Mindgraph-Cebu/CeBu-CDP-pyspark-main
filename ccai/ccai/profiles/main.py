@@ -174,62 +174,63 @@ def load_data(config,spark,LOGGER,partition_date,archive_date):
         if each_source['entityType'] == 'snapshot':
             
             # load open partitions - archive and a business date
-            # open_paths = [
-            #     each_source['pathUrl'].replace("nonopen", "open") + "/ods=" + date + "/"
-            #     for date in [partition_date, archive_date]
-            # ]
+            open_paths = [
+                each_source['pathUrl'].replace("nonopen", "open") + "/ods=" + date + "/"
+                for date in [partition_date, archive_date]
+            ]
 
-            # try:
-            #     #try loading both partitions
-            #     source_dict[each_source['entityName']] = spark.read.load(
-            #         open_paths, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-            #     record_count = source_dict[each_source['entityName']].count()
-            #     LOGGER.info("ccai -> Load Data b&a - {} : {} rows".format(each_source['entityName'], record_count))
-            # except:
-            #     #try loading business date partition
-            #     source_dict[each_source['entityName']] = spark.read.load(
-            #         open_paths[0], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-            #     record_count = source_dict[each_source['entityName']].count()
-            #     LOGGER.info("ccai -> Load Data b - {} : {} rows".format(each_source['entityName'], record_count))
+            try:
+                #try loading both partitions
+                source_dict[each_source['entityName']] = spark.read.load(
+                    open_paths, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+                record_count = source_dict[each_source['entityName']].count()
+                LOGGER.info("ccai -> Load Data b&a - {} : {} rows".format(each_source['entityName'], record_count))
+            except:
+                #try loading business date partition
+                source_dict[each_source['entityName']] = spark.read.load(
+                    open_paths[0], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+                record_count = source_dict[each_source['entityName']].count()
+                LOGGER.info("ccai -> Load Data b - {} : {} rows".format(each_source['entityName'], record_count))
                 
         
-            # #get available non open partitions
-            # path = each_source['pathUrl']
-            # resource_name = each_source['entityName']
+            #get available non open partitions
+            path = each_source['pathUrl']
+            resource_name = each_source['entityName']
 
-            # if each_source['entityName'] == "all_booking" or each_source['entityName'] == "all_passengerjourneysegment":
-            #     path = each_source['pathUrl'] + "version"  
-            #     resource_name = each_source['entityName'] + "version"
+            non_open_sources = ["all_booking","all_passengerjourneysegment","all_passengerfee","all_passengerjourneyleg"]
+            if each_source['entityName'] in non_open_sources:
+                path = each_source['pathUrl'] + "version"  
+                resource_name = each_source['entityName'] + "version"
 
-            # bucket,prefix = get_bucket(config,resource_name)
-            # available_partitions = list_folders_in_path(bucket, prefix,LOGGER,archive_date,partition_date)
-            # partition_paths = getpaths(available_partitions,resource_name,path)
+            bucket,prefix = get_bucket(config,resource_name)
+            available_partitions = list_folders_in_path(bucket, prefix,LOGGER,archive_date,partition_date)
+            partition_paths = getpaths(available_partitions,resource_name,path)
             
 
-            # #load only if partitions are available
-            # if partition_paths:
-            #     ##should edit
-            #     non_open_df = spark.read.load(
-            #             partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').select(column_list[each_source['entityName']])
+            #load only if partitions are available
+            if partition_paths:
+                ##should edit
+                non_open_df = spark.read.load(
+                        partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').select(column_list[each_source['entityName']])
 
-            #     if each_source['entityName'] == "all_passengerjourneysegment":
-            #         non_open_df = spark.read.load(
-            #             partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').where("VersionEndUTC == '9999-12-31 00:00:00.000'").select(column_list[each_source['entityName']])
+                if each_source['entityName'] in non_open_sources:
+                    non_open_df = spark.read.load(
+                        partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').where("VersionEndUTC == '9999-12-31 00:00:00.000'").select(column_list[each_source['entityName']])
 
                 
-            #     source_dict[each_source['entityName']] = source_dict[each_source['entityName']].unionAll(non_open_df)
-            #     record_count = non_open_df.count()
-            #     LOGGER.info("ccai -> Load Data non open  - {} : {} rows".format(resource_name, record_count))
+                source_dict[each_source['entityName']] = source_dict[each_source['entityName']].unionAll(non_open_df)
+                record_count = non_open_df.count()
+                LOGGER.info("ccai -> Load Data non open  - {} : {} rows".format(resource_name, record_count))
 
-            # record_count = source_dict[each_source['entityName']].count()
-            # LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
-            # LOGGER.info(f"{each_source['entityName']} loaded successfully")
-
-            ##<------- open 2023-07-31 -------->##
-            source_dict[each_source['entityName']] = spark.read.load(
-                    each_source['pathUrl'] + "/" + "ods=" +partition_date, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
             record_count = source_dict[each_source['entityName']].count()
             LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
+            LOGGER.info(f"{each_source['entityName']} loaded successfully")
+
+            ##<------- open-------->##
+            # source_dict[each_source['entityName']] = spark.read.load(
+            #         each_source['pathUrl'] + "/" + "ods=" +partition_date, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+            # record_count = source_dict[each_source['entityName']].count()
+            # LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
 
     source_dict = filter_tables(config, source_dict,LOGGER)
 
@@ -238,16 +239,15 @@ def load_data(config,spark,LOGGER,partition_date,archive_date):
 
 def derived_tables(config, source_dict, spark, LOGGER):
     derive_dict = {
-        "all_passengerjourneyleg": ["select * from all_passengerjourneyleg order by PassengerID, ModifiedUTC desc", "SELECT PassengerID, CONCAT_WS('_',COLLECT_LIST(UnitDesignator)) AS UnitDesignator FROM all_passengerjourneyleg GROUP BY PassengerID"],
-        "GetTravelDestination_all_passengerjourneysegment": ["SELECT PassengerID,JourneyNumber,ArrivalStation from all_passengerjourneysegment group by PassengerID,JourneyNumber,ArrivalStation order by PassengerID, JourneyNumber", "select PassengerID, CONCAT_WS('_',COLLECT_LIST(ArrivalStation)) as ArrivalStation FROM GetTravelDestination_all_passengerjourneysegment GROUP BY PassengerID"],
+        "all_passengerjourneyleg": ["select distinct PassengerID,UnitDesignator,SegmentID,LegNumber from all_passengerjourneyleg order by PassengerID, SegmentID,LegNumber", "SELECT PassengerID, CONCAT_WS('_',COLLECT_LIST(UnitDesignator)) AS UnitDesignator FROM all_passengerjourneyleg GROUP BY PassengerID"],
+        "GetTravelDestination_all_passengerjourneysegment": ["SELECT distinct PassengerID,JourneyNumber,ArrivalStation from all_passengerjourneysegment order by PassengerID, JourneyNumber", "select PassengerID, CONCAT_WS('_',COLLECT_LIST(ArrivalStation)) as ArrivalStation FROM GetTravelDestination_all_passengerjourneysegment GROUP BY PassengerID"],
         # "GetTravelDestination_all_passengerjourneysegment": ["SELECT all_passengerjourneysegment.PassengerID AS PassengerID, all_passengerjourneysegment.ArrivalStation AS ArrivalStation FROM ( SELECT PassengerID, max(JourneyNumber) AS maxJourneyNumber FROM all_passengerjourneysegment GROUP BY PassengerID ) AS all_passengerjourneysegment_max JOIN all_passengerjourneysegment ON all_passengerjourneysegment_max.PassengerID = all_passengerjourneysegment.PassengerID AND all_passengerjourneysegment_max.maxJourneyNumber = all_passengerjourneysegment.JourneyNumber"]
         "GetPassportNumber_all_passengertraveldoc": ["SELECT all_passengertraveldoc.PassengerID AS PassengerID, all_passengertraveldoc.DocNumber AS DocNumber, all_passengertraveldoc.IssuedByCode AS IssuedByCode, all_passengertraveldoc.ExpirationDate AS ExpirationDate FROM all_passengertraveldoc WHERE upper(all_passengertraveldoc.DocTypeCode) = 'P' AND (all_passengertraveldoc.PassengerID, all_passengertraveldoc.ExpirationDate) IN ( SELECT all_passengertraveldoc.PassengerID AS PassengerID, max(all_passengertraveldoc.ExpirationDate) AS maxExpirationDate FROM all_passengertraveldoc where upper(all_passengertraveldoc.DocTypeCode) = 'P' GROUP BY all_passengertraveldoc.PassengerID )"],
         "GetPassportNumber_all_traveldoc": ["SELECT all_traveldoc.PersonID AS PersonID, all_traveldoc.DocNumber AS DocNumber, all_traveldoc.IssuedByCode AS IssuedByCode, all_traveldoc.ExpirationDate AS ExpirationDate FROM all_traveldoc WHERE upper(all_traveldoc.DocTypeCode) = 'P' AND (all_traveldoc.PersonID, all_traveldoc.ExpirationDate) IN ( SELECT all_traveldoc.PersonID AS PersonID, max(all_traveldoc.ExpirationDate) AS maxExpirationDate FROM all_traveldoc where upper(all_traveldoc.DocTypeCode) = 'P' GROUP BY all_traveldoc.PersonID)"],
         "all_fee": ["select all_passengerfee.PassengerID,all_passengerfee.FeeCode, all_fee.Name from all_passengerfee left join all_fee on all_passengerfee.FeeCode = all_fee.FeeCode"],
         "all_passengerjourneysegment": ["select * from all_passengerjourneysegment where JourneyNumber = 1"],
         "GetTravelSoloOrGroup_all_bookingpassenger": ["select BookingID, case when count(distinct PassengerID) > 1 then 'Group' else 'Solo' end as TravelSoloOrGroup from all_bookingpassenger group by BookingID"]
-        # filtering out status 4 booking id
-        # "all_booking" : ["select * from all_booking where Status != 4"]
+        
     }
     mask_sources = ["all_passengerfee"]
     # create temp tables for all sources

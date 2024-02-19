@@ -1875,6 +1875,14 @@
                 {
                     "entityName": "all_passengerjourneyleg",
                     "columnName": "ModifiedUTC"
+                },
+                {
+                    "entityName": "all_passengerjourneyleg",
+                    "columnName": "LegNumber"
+                },
+                {
+                    "entityName": "all_passengerjourneyleg",
+                    "columnName": "SegmentID"
                 }
             ],
             "transformationFunction": "GetTravelSeat"
