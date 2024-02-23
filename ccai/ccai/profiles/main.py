@@ -113,7 +113,7 @@ def list_folders_in_path(bucket_name, prefix,LOGGER,start_date,end_date):
 #     return [base_path + date + "/" for date in available_partitions]
 
 def getpaths(available_partitions, entityName, path_url):
-    return [path_url + "/nds=" + date + "/" for date in available_partitions]
+    return [path_url + "/vds=" + date + "/" for date in available_partitions]
 
 
 def get_bucket(config,entityName):
@@ -129,35 +129,8 @@ def get_bucket(config,entityName):
     prefix = '/'.join(path.split("/")[3:-1])+"/"+ path.split("/")[4] + "_" + entityName + "/"
     return bucket,prefix
 
-# def load_data(config, partition_date, spark, LOGGER):
-#     column_list = get_columns_list(config)
-#     source_dict = {}
-#     for each_source in config['entityDetails']:
-#         if each_source['entityType'] == 'snapshot':
-#             # get latest partition
-#             latest_partition = get_latest_partition(
-#                 each_source['pathUrl'], each_source['partitionDetails']['partitionColumn'][0], partition_date)
-#             required_partition = "{{{},2023-07-31}}".format(latest_partition) #"ods={2023-03-21,}"
-#             # read orc data using spark
-#             source_dict[each_source['entityName']] = spark.read.load(
-#                 each_source['pathUrl'] + "/" + latest_partition, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-#             record_count = source_dict[each_source['entityName']].count()
-#             if record_count==0:
-#                 LOGGER.info("ccai -> Record count 0 for " + str(each_source['entityName']))
-#                 source_dict[each_source['entityName']] = spark.read.load(
-#                     each_source['pathUrl'] + "/" + "ods=2023-07-31", format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-#                 record_count = source_dict[each_source['entityName']].count()
-#             LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
-#     source_dict = filter_tables(config, source_dict, LOGGER)
-#     all_fee_debug = source_dict['all_fee'].limit(10).toPandas().to_csv(index=False)
-#     LOGGER.info("ccai -> all fee data\n\n"+all_fee_debug)
-#     # import sys
-#     # sys.exit("ccai Exit -> all fee data")
-#     return source_dict
 
-
-
-def load_data(config,spark,LOGGER,partition_date,archive_date):
+def load_data(config,spark,LOGGER,start_date,end_date):
 
     """
     Archive , non open and a business date is been loaded 
@@ -172,65 +145,26 @@ def load_data(config,spark,LOGGER,partition_date,archive_date):
     source_dict = {}
     for each_source in config['entityDetails']:
         if each_source['entityType'] == 'snapshot':
-            
-            # load open partitions - archive and a business date
-            open_paths = [
-                each_source['pathUrl'].replace("nonopen", "open") + "/ods=" + date + "/"
-                for date in [partition_date, archive_date]
-            ]
 
-            try:
-                #try loading both partitions
-                source_dict[each_source['entityName']] = spark.read.load(
-                    open_paths, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-                record_count = source_dict[each_source['entityName']].count()
-                LOGGER.info("ccai -> Load Data b&a - {} : {} rows".format(each_source['entityName'], record_count))
-            except:
-                #try loading business date partition
-                source_dict[each_source['entityName']] = spark.read.load(
-                    open_paths[0], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-                record_count = source_dict[each_source['entityName']].count()
-                LOGGER.info("ccai -> Load Data b - {} : {} rows".format(each_source['entityName'], record_count))
-                
-        
+
             #get available non open partitions
             path = each_source['pathUrl']
             resource_name = each_source['entityName']
 
-            non_open_sources = ["all_booking","all_passengerjourneysegment","all_passengerfee","all_passengerjourneyleg"]
-            if each_source['entityName'] in non_open_sources:
-                path = each_source['pathUrl'] + "version"  
-                resource_name = each_source['entityName'] + "version"
-
             bucket,prefix = get_bucket(config,resource_name)
-            available_partitions = list_folders_in_path(bucket, prefix,LOGGER,archive_date,partition_date)
+            available_partitions = list_folders_in_path(bucket, prefix,LOGGER,start_date,end_date)
             partition_paths = getpaths(available_partitions,resource_name,path)
             
-
             #load only if partitions are available
-            if partition_paths:
-                ##should edit
-                non_open_df = spark.read.load(
-                        partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').select(column_list[each_source['entityName']])
-
-                if each_source['entityName'] in non_open_sources:
-                    non_open_df = spark.read.load(
-                        partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').where("VersionEndUTC == '9999-12-31 00:00:00.000'").select(column_list[each_source['entityName']])
-
                 
-                source_dict[each_source['entityName']] = source_dict[each_source['entityName']].unionAll(non_open_df)
-                record_count = non_open_df.count()
-                LOGGER.info("ccai -> Load Data non open  - {} : {} rows".format(resource_name, record_count))
+            source_dict[each_source['entityName']] = spark.read.load(
+                partition_paths, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+
 
             record_count = source_dict[each_source['entityName']].count()
             LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
             LOGGER.info(f"{each_source['entityName']} loaded successfully")
 
-            ##<------- open-------->##
-            # source_dict[each_source['entityName']] = spark.read.load(
-            #         each_source['pathUrl'] + "/" + "ods=" +partition_date, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-            # record_count = source_dict[each_source['entityName']].count()
-            # LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
 
     source_dict = filter_tables(config, source_dict,LOGGER)
 
@@ -1333,7 +1267,7 @@ def fillNa(config, profile_df, spark):
 #     return voucher_df
 
 
-def add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy,archive_date):
+def add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy):
 
     LOGGER.info("ccai - Processing CSP transactions")
     source_dict_copy["all_booking"].createOrReplaceTempView("booking")
@@ -1392,8 +1326,9 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     spark_conf(spark)
     LOGGER.info("ccai - ConfigPath : " + str(config_path))
     config = get_config(config_path)
-    archive_date = "2021-01-01"
-    source_dict= load_data(config, spark,LOGGER,partition_date,archive_date)
+    start_date = ""
+    end_date = ""
+    source_dict= load_data(config, spark,LOGGER,start_date,end_date)
     LOGGER.info("ccai - data loading complete")
     # LOGGER.info("ccai -> bookingid count after load data : {}".format(source_dict['all_booking'].select('BookingID').distinct().count()))
     
@@ -1481,7 +1416,7 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     profile_df = profile_df.dropDuplicates(subset=["PassengerID"])
     LOGGER.info("ccai - profile row count after dropping duplicates: " + str(profile_df.count()))
 
-    profile_df = add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy,archive_date)
+    profile_df = add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy)
     LOGGER.info(f"ccai csp attribute added")
     
     profile_df = ignore_bookings(source_dict_copy, profile_df,LOGGER)
@@ -1495,7 +1430,7 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     save_path = config['storageDetails'][0]['pathUrl']
     ucp_path = config['storageDetails'][2]['pathUrl'] + \
         "/" + "p_date=" + partition_date
-    profile_df.write.mode("overwrite").parquet(save_path)
+    profile_df.write.mode("append").parquet(save_path)
 
     # profile_df_10rowsStr = spark.read.parquet(save_path).limit(10).toPandas().to_csv()
     # LOGGER.info("ccai - sample 10 rows : \n"+ str(profile_df_10rowsStr))
