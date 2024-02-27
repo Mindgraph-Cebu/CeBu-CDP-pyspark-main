@@ -185,7 +185,10 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark, partiti
                                             .withColumn("dateSim", get_date_similarity(F.col("DateOfBirth"), F.col("DateOfBirth_r")))\
                                             .filter("dateSim").drop("dateSim")
         retained_passengers.cache()
-        passenger_hash_overrides = retained_passengers.select("passenger_hash","passenger_hash_r").dropDuplicates()#.cache()
+        
+        passenger_hash_overrides = retained_passengers.select("passenger_hash","passenger_hash_r").groupBy("passenger_hash").agg(F.max("passenger_hash_r").alias("passenger_hash_r"))#.dropDuplicates()#.cache()
+        passenger_hash_overrides.cache()
+        
         new_passengers = observed_passengers.join(retained_passengers, "ProvisionalPrimaryKey", "left_anti").drop("ProvisionalPrimaryKey").dropDuplicates()
         df_profile.join(passenger_hash_overrides, ["passenger_hash"], "left").withColumn("passenger_hash", F.coalesce("passenger_hash_r","passenger_hash")).drop("passenger_hash_r").write.parquet(ucp_path, mode="overwrite")
         new_passengers.write.parquet(new_passengers_base_path+"/p_date={}".format(partition_date), mode='overwrite')
