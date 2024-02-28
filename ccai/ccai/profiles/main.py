@@ -130,7 +130,7 @@ def get_bucket(config,entityName):
     return bucket,prefix
 
 
-def load_data(config,spark,LOGGER,start_date,end_date):
+def load_data_incremental(config,spark,LOGGER,start_date,end_date):
 
     """
     Archive , non open and a business date is been loaded 
@@ -169,6 +169,7 @@ def load_data(config,spark,LOGGER,start_date,end_date):
     source_dict = filter_tables(config, source_dict,LOGGER)
 
     return source_dict 
+
 
 
 def derived_tables(config, source_dict, spark, LOGGER):
