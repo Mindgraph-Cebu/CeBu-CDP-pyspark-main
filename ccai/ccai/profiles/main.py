@@ -174,63 +174,63 @@ def load_data(config,spark,LOGGER,partition_date,archive_date):
         if each_source['entityType'] == 'snapshot':
             
             # load open partitions - archive and a business date
-            open_paths = [
-                each_source['pathUrl'].replace("nonopen", "open") + "/ods=" + date + "/"
-                for date in [partition_date, archive_date]
-            ]
+            # open_paths = [
+            #     each_source['pathUrl'].replace("nonopen", "open") + "/ods=" + date + "/"
+            #     for date in [partition_date, archive_date]
+            # ]
 
-            try:
-                #try loading both partitions
-                source_dict[each_source['entityName']] = spark.read.load(
-                    open_paths, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-                record_count = source_dict[each_source['entityName']].count()
-                LOGGER.info("ccai -> Load Data b&a - {} : {} rows".format(each_source['entityName'], record_count))
-            except:
-                #try loading business date partition
-                source_dict[each_source['entityName']] = spark.read.load(
-                    open_paths[0], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-                record_count = source_dict[each_source['entityName']].count()
-                LOGGER.info("ccai -> Load Data b - {} : {} rows".format(each_source['entityName'], record_count))
+            # try:
+            #     #try loading both partitions
+            #     source_dict[each_source['entityName']] = spark.read.load(
+            #         open_paths, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+            #     record_count = source_dict[each_source['entityName']].count()
+            #     LOGGER.info("ccai -> Load Data b&a - {} : {} rows".format(each_source['entityName'], record_count))
+            # except:
+            #     #try loading business date partition
+            #     source_dict[each_source['entityName']] = spark.read.load(
+            #         open_paths[0], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+            #     record_count = source_dict[each_source['entityName']].count()
+            #     LOGGER.info("ccai -> Load Data b - {} : {} rows".format(each_source['entityName'], record_count))
                 
         
-            #get available non open partitions
-            path = each_source['pathUrl']
-            resource_name = each_source['entityName']
+            # #get available non open partitions
+            # path = each_source['pathUrl']
+            # resource_name = each_source['entityName']
 
-            non_open_sources = ["all_booking","all_passengerjourneysegment","all_passengerfee","all_passengerjourneyleg"]
-            if each_source['entityName'] in non_open_sources:
-                path = each_source['pathUrl'] + "version"  
-                resource_name = each_source['entityName'] + "version"
+            # non_open_sources = ["all_booking","all_passengerjourneysegment","all_passengerfee","all_passengerjourneyleg"]
+            # if each_source['entityName'] in non_open_sources:
+            #     path = each_source['pathUrl'] + "version"  
+            #     resource_name = each_source['entityName'] + "version"
 
-            bucket,prefix = get_bucket(config,resource_name)
-            available_partitions = list_folders_in_path(bucket, prefix,LOGGER,archive_date,partition_date)
-            partition_paths = getpaths(available_partitions,resource_name,path)
+            # bucket,prefix = get_bucket(config,resource_name)
+            # available_partitions = list_folders_in_path(bucket, prefix,LOGGER,archive_date,partition_date)
+            # partition_paths = getpaths(available_partitions,resource_name,path)
             
 
-            #load only if partitions are available
-            if partition_paths:
-                ##should edit
-                non_open_df = spark.read.load(
-                        partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').select(column_list[each_source['entityName']])
+            # #load only if partitions are available
+            # if partition_paths:
+            #     ##should edit
+            #     non_open_df = spark.read.load(
+            #             partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').select(column_list[each_source['entityName']])
 
-                if each_source['entityName'] in non_open_sources:
-                    non_open_df = spark.read.load(
-                        partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').where("VersionEndUTC == '9999-12-31 00:00:00.000'").select(column_list[each_source['entityName']])
+            #     if each_source['entityName'] in non_open_sources:
+            #         non_open_df = spark.read.load(
+            #             partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').where("VersionEndUTC == '9999-12-31 00:00:00.000'").select(column_list[each_source['entityName']])
 
                 
-                source_dict[each_source['entityName']] = source_dict[each_source['entityName']].unionAll(non_open_df)
-                record_count = non_open_df.count()
-                LOGGER.info("ccai -> Load Data non open  - {} : {} rows".format(resource_name, record_count))
+            #     source_dict[each_source['entityName']] = source_dict[each_source['entityName']].unionAll(non_open_df)
+            #     record_count = non_open_df.count()
+            #     LOGGER.info("ccai -> Load Data non open  - {} : {} rows".format(resource_name, record_count))
 
-            record_count = source_dict[each_source['entityName']].count()
-            LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
-            LOGGER.info(f"{each_source['entityName']} loaded successfully")
-
-            ##<------- open-------->##
-            # source_dict[each_source['entityName']] = spark.read.load(
-            #         each_source['pathUrl'] + "/" + "ods=" +partition_date, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
             # record_count = source_dict[each_source['entityName']].count()
             # LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
+            # LOGGER.info(f"{each_source['entityName']} loaded successfully")
+
+            ##<------- open-------->##
+            source_dict[each_source['entityName']] = spark.read.load(
+                    each_source['pathUrl'] + "/" + "ods=" +partition_date, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+            record_count = source_dict[each_source['entityName']].count()
+            LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
 
     source_dict = filter_tables(config, source_dict,LOGGER)
 
