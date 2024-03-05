@@ -130,16 +130,8 @@ def get_bucket(config,entityName):
     return bucket,prefix
 
 
-def load_data_incremental(config,spark,LOGGER,start_date,end_date):
+def load_data(config,spark,LOGGER,partition_date):
 
-    """
-    Archive , non open and a business date is been loaded 
-    Date's -
-                Archive data date = 2021-01-01
-                Business Date(ex) = 2023-07-31
-                Non Open = From 2021-01-01 to 2023-07-31
-
-    """
 
     column_list = get_columns_list(config)
     source_dict = {}
@@ -147,23 +139,10 @@ def load_data_incremental(config,spark,LOGGER,start_date,end_date):
         if each_source['entityType'] == 'snapshot':
 
 
-            #get available non open partitions
-            path = each_source['pathUrl']
-            resource_name = each_source['entityName']
-
-            bucket,prefix = get_bucket(config,resource_name)
-            available_partitions = list_folders_in_path(bucket, prefix,LOGGER,start_date,end_date)
-            partition_paths = getpaths(available_partitions,resource_name,path)
-            
-            #load only if partitions are available
-                
             source_dict[each_source['entityName']] = spark.read.load(
-                partition_paths, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-
-
+                    each_source['pathUrl'] + "/" + "ods=" +partition_date, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
             record_count = source_dict[each_source['entityName']].count()
             LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
-            LOGGER.info(f"{each_source['entityName']} loaded successfully")
 
 
     source_dict = filter_tables(config, source_dict,LOGGER)
@@ -180,7 +159,7 @@ def derived_tables(config, source_dict, spark, LOGGER):
         "GetPassportNumber_all_passengertraveldoc": ["SELECT all_passengertraveldoc.PassengerID AS PassengerID, all_passengertraveldoc.DocNumber AS DocNumber, all_passengertraveldoc.IssuedByCode AS IssuedByCode, all_passengertraveldoc.ExpirationDate AS ExpirationDate FROM all_passengertraveldoc WHERE upper(all_passengertraveldoc.DocTypeCode) = 'P' AND (all_passengertraveldoc.PassengerID, all_passengertraveldoc.ExpirationDate) IN ( SELECT all_passengertraveldoc.PassengerID AS PassengerID, max(all_passengertraveldoc.ExpirationDate) AS maxExpirationDate FROM all_passengertraveldoc where upper(all_passengertraveldoc.DocTypeCode) = 'P' GROUP BY all_passengertraveldoc.PassengerID )"],
         "GetPassportNumber_all_traveldoc": ["SELECT all_traveldoc.PersonID AS PersonID, all_traveldoc.DocNumber AS DocNumber, all_traveldoc.IssuedByCode AS IssuedByCode, all_traveldoc.ExpirationDate AS ExpirationDate FROM all_traveldoc WHERE upper(all_traveldoc.DocTypeCode) = 'P' AND (all_traveldoc.PersonID, all_traveldoc.ExpirationDate) IN ( SELECT all_traveldoc.PersonID AS PersonID, max(all_traveldoc.ExpirationDate) AS maxExpirationDate FROM all_traveldoc where upper(all_traveldoc.DocTypeCode) = 'P' GROUP BY all_traveldoc.PersonID)"],
         "all_fee": ["select all_passengerfee.PassengerID,all_passengerfee.FeeCode, all_fee.Name from all_passengerfee left join all_fee on all_passengerfee.FeeCode = all_fee.FeeCode"],
-        "all_passengerjourneysegment": ["select * from all_passengerjourneysegment where JourneyNumber = 1"],
+        "all_passengerjourneysegment": ["select * from all_passengerjourneysegment where JourneyNumber = 1 and SegmentNumber = 1"],
         "GetTravelSoloOrGroup_all_bookingpassenger": ["select BookingID, case when count(distinct PassengerID) > 1 then 'Group' else 'Solo' end as TravelSoloOrGroup from all_bookingpassenger group by BookingID"]
         
     }
@@ -1327,9 +1306,7 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     spark_conf(spark)
     LOGGER.info("ccai - ConfigPath : " + str(config_path))
     config = get_config(config_path)
-    start_date = ""
-    end_date = ""
-    source_dict= load_data(config, spark,LOGGER,start_date,end_date)
+    source_dict= load_data(config, spark,LOGGER,partition_date)
     LOGGER.info("ccai - data loading complete")
     # LOGGER.info("ccai -> bookingid count after load data : {}".format(source_dict['all_booking'].select('BookingID').distinct().count()))
     
