@@ -8,7 +8,7 @@ from ccai.license.license_check import check_license
 from ccai.profiles.main import compute_profile
 from ccai.dedupe.main import compute_dedupe
 # from ccai.ucp.main import compute_ucp  # Use Incremental
-from ccai.ucp.main_incremental import compute_ucp
+from ccai.ucp.main import compute_ucp
 from ccai.ui_compute.main import compute_ui
 from importlib import resources as impresources
 from . import data
@@ -55,8 +55,6 @@ class customer360ai:
         ucp_path,
         partition_date,
         logger,
-        is_incremental, 
-        new_passengers_base_path
     ):
         return compute_ucp(
             config_path=config_path,
@@ -66,8 +64,7 @@ class customer360ai:
             ucp_path=ucp_path,
             partition_date=partition_date,
             LOGGER=logger,
-            is_incremental, 
-            new_passengers_base_path
+
         )
 
     def compute_ui(self, config_path, spark, profile_path, logger):
