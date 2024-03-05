@@ -1,3 +1,0 @@
-s3://cebu-cdp-data-dev/script/glue/cebu-cdp-dedup-glue/packages/ccai-0.1.0-py3-none-any.whl,abydos==0.5.0,recordlinkage==0.15,networkx==3.0,unidecode==1.3.6,ceja==0.4.0
-
-s3://cebu-cdp-data-dev/script/glue/cebu-cdp-dedup-glue/packages/ccai-0.1.0-py3-none-any.whl,abydos==0.5.0,networkx==3.0,unidecode==1.3.6,ibis-framework[duckdb],textdistance

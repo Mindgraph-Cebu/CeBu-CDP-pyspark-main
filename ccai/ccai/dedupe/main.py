@@ -89,7 +89,8 @@ class DriverLogs:
         return """\n{}\n{}\n{}\n{}""".format("*"*100, "Driver Logs: ", "\n".join(self.log_list), "*"*100)
 
 
-def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph):
+def compute_dedupe(config_path, spark, end_date, LOGGER, loaded_dob_graph):
+    partition_date = end_date
     driver_log = DriverLogs()
     config = get_config(config_path)
     spark.conf.set("spark.sql.mapKeyDedupPolicy", "LAST_WIN")
@@ -590,7 +591,8 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
 
     # df.write.mode("overwrite").parquet("s3a://cebu-cdp-data-dev/dedupe-cluster-1")
     LOGGER.info("ccai write: {}".format(df_count))
-    save_path = config["storageDetails"][1]["pathUrl"]
+    save_path = config["storageDetails"][1]["pathUrl"]+ \
+        "/" + "p_date=" + partition_date
     driver_log.log("Save Path = {}".format(save_path))
 
     # df.drop("pFirstName", "pLastName").write.mode("overwrite").parquet(save_path)
