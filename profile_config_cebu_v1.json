@@ -1757,6 +1757,10 @@
                 {
                     "entityName": "all_passengerjourneysegment",
                     "columnName": "JourneyNumber"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "SegmentNumber"
                 }
             ],
             "transformationFunction": "GetTravelOriginAndDate"
