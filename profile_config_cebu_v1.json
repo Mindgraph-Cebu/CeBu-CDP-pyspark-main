@@ -3348,9 +3348,8 @@
             "pathUrl": "s3a://cebu-cdp-data-qa/ignored_profiles/archieve_data/",
             "storageHandler": "PersistHadoopFS"
         }
+     
     ],
     "ciamPath": "s3a://edw-dl-process-data-qa/data/ciam/hdata/ciam_all_diffen_open/ciam_all_edwcustomer",
     "voucherPath":"s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_voucher"
 }
-
-

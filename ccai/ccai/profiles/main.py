@@ -1408,7 +1408,7 @@ def compute_profile(config_path, spark, partition_date, LOGGER):
     save_path = config['storageDetails'][0]['pathUrl']
     ucp_path = config['storageDetails'][2]['pathUrl'] + \
         "/" + "p_date=" + partition_date
-    profile_df.write.mode("append").parquet(save_path)
+    profile_df.write.mode("overwrite").parquet(save_path)
 
     # profile_df_10rowsStr = spark.read.parquet(save_path).limit(10).toPandas().to_csv()
     # LOGGER.info("ccai - sample 10 rows : \n"+ str(profile_df_10rowsStr))
