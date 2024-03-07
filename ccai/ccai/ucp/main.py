@@ -87,7 +87,8 @@ def get_old_passengers_paths(new_passengers_base_path):
     for obj in objects['Contents']:
         file_name = obj['Key']
         if file_name.startswith("new_passengers/p_date="):
-            s3_path = 's3://{}/{}'.format(bucket_name, file_name)
+            s3_path = 's3a://{}/{}'.format(bucket_name, file_name)
+            all_paths.append(s3_path) #missed append
     return all_paths
 
 def get_config(file_path):
@@ -167,7 +168,7 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark, end_dat
     sm = SpanishMetaphone()
     phonetic_encode_udf = F.udf(lambda x: phonetic_encode(sm, x), T.StringType())
 
-    if incremental == "False":
+    if incremental == "False" or incremental == False:
 
         df_profile.write.parquet(ucp_path, mode="overwrite")
 
@@ -201,6 +202,7 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark, end_dat
         new_passengers.write.parquet(new_passengers_base_path+"/p_date={}".format(partition_date), mode='overwrite')
 
     else:
+        LOGGER.info("ccai -> ucp incremental started")
         df_profile.cache()
         profile_count_init = df_profile.count()
         observed_passengers = df_profile.filter("(FirstName is not null) and (LastName is not null) and (DateOfBirth is not null) and (DateOfBirth>='1947') and (DateOfBirth<'3000') and (DateOfBirth not like '9999%') and (DateOfBirth not like '%xxx%')")\
@@ -208,7 +210,7 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark, end_dat
                                                F.lower(F.regexp_replace(unidecode_encode("LastName"), "[^a-zA-Z0-9 ]", "")).alias("LastName"),
                                                F.col("DateOfBirth").alias("DateOfBirth"),
                                                F.col("passenger_hash").alias("passenger_hash"),
-                                               F.col("ProvisionalPrimaryKey".alias("ProvisionalPrimaryKey")))\
+                                               F.col("ProvisionalPrimaryKey").alias("ProvisionalPrimaryKey"))\
                                        .filter("(FirstName not in ('{}')) and (LastName not in ('{}'))".format("','".join(firstname_filters), "','".join(lastname_filters)))\
                                        .withColumn("pFirstName",F.trim(F.regexp_replace(F.regexp_replace(F.col("FirstName"), "\.", " "), "^(mr|ms|dr|rev|prof|sir|madam|miss|mrs|st)", "")))\
                                        .withColumn("pFirstName", phonetic_encode_udf(F.split(F.col("pFirstName"), " ").getItem(0)) )\

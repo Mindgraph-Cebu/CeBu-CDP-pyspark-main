@@ -113,7 +113,7 @@ def compute_dedupe(config_path, spark, end_date, LOGGER, loaded_dob_graph):
     # spark.conf.set("spark.executor.memory", "8g")
     # df = spark.read.load(config['storageDetails'][0]['pathUrl'], format="parquet").select("ProvisionalPrimaryKey","FirstName", "LastName", "DateOfBirth", "Gender","EmailAddress", "Phone", "PassengerID", "PersonID", "BookerFirstName", "BookerLastName")
     df = spark.read.load(
-        config["storageDetails"][0]["pathUrl"], format="parquet"
+        config["storageDetails"][0]["pathUrl"]+"/p_date="+partition_date, format="parquet"
     ).select(
         "ProvisionalPrimaryKey",
         "FirstName",

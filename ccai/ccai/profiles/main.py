@@ -1050,7 +1050,7 @@ def join_ciam(config,profile_df,spark, partition_date,LOGGER,start_date,incremen
     ciam_open = ""
     format = ""
 
-    if incremental == "False":
+    if incremental == "False" or incremental == False:
         ciam_open_url = config['ciamPath']
 
         ciam_open = f"{ciam_open_url}/ods={partition_date}/"
@@ -1188,7 +1188,7 @@ def compute_profile(config_path, spark,LOGGER,start_date,end_date,incremental):
     spark_conf(spark)
     LOGGER.info("ccai " + str(incremental) + "," + str(type(incremental)))
 
-    if incremental == "False":
+    if incremental == "False" or incremental == False:
         LOGGER.info("ccai - Day 0 started")
     else:
         LOGGER.info("ccai - Incremental started")
@@ -1196,7 +1196,7 @@ def compute_profile(config_path, spark,LOGGER,start_date,end_date,incremental):
     config = get_config(config_path)
     partition_date = end_date
     # archive_date = "2021-01-01"
-    source_dict= load_data_day0(config, spark,LOGGER,partition_date,start_date) if incremental == "False" else load_data_incremental(config,spark,LOGGER,start_date,end_date)
+    source_dict= load_data_day0(config, spark,LOGGER,partition_date,start_date) if incremental == "False" or incremental == False else load_data_incremental(config,spark,LOGGER,start_date,end_date)
     LOGGER.info("ccai - data loading complete")
     
     source_dict_copy = source_dict.copy()
