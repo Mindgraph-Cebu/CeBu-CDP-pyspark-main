@@ -64,6 +64,7 @@ class customer360ai:
         profile_path,
         dedupe_path,
         ucp_path,
+        day0_date,
         end_date,
         logger,
         incremental 
@@ -74,15 +75,17 @@ class customer360ai:
             profile_path=profile_path,
             dedupe_path=dedupe_path,
             ucp_path=ucp_path,
+            day0_date=day0_date,
             end_date=end_date,
             LOGGER=logger,
             incremental=incremental
         )
 
-    def compute_ui(self, config_path, spark, profile_path, logger):
+    def compute_ui(self, config_path, spark, profile_path, logger,day0_date):
         return compute_ui(
             config_path=config_path,
             spark=spark,
             profile_path=profile_path,
             LOGGER=logger,
+            day0_date=day0_date
         )

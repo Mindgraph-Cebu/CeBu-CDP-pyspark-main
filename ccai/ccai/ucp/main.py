@@ -78,18 +78,21 @@ def phonetic_encode(sm, name):
     except:
         return "CCAI_NULL"
 
-def get_old_passengers_paths(new_passengers_base_path):
+def get_old_passengers_paths(new_passengers_base_path,day0_date,end_date):
     bucket_name = new_passengers_base_path.split("/")[2]
-    prefix = '/'.join(new_passengers_base_path.split("/")[3:])
+    prefix = "new_passengers/"
     s3 = boto3.client('s3')
-    objects = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
-    all_paths = list()
-    for obj in objects['Contents']:
-        file_name = obj['Key']
-        if file_name.startswith("new_passengers/p_date="):
-            s3_path = 's3a://{}/{}'.format(bucket_name, file_name)
-            all_paths.append(s3_path) #missed append
-    return all_paths
+    response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix, Delimiter='/')
+
+    paths = []
+    for common_prefix in response.get('CommonPrefixes', []):
+        folder_name = common_prefix['Prefix']
+        date_str = folder_name.split("=")[-1].rstrip('/')
+        if day0_date <= date_str <= end_date:
+            s3_path = 's3a://{}/new_passengers/p_date={}/'.format(bucket_name,date_str)
+            paths.append(s3_path)
+    return paths
+
 
 def get_config(file_path):
     # file_path = "s3a://cebu-cdp-data-qa/script/glue/cebu-cdp-profile-glue/profile_config_cebu_v1.json"
@@ -101,7 +104,7 @@ def get_config(file_path):
     return config
 
 
-def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark, end_date, LOGGER, incremental):
+def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_date, end_date, LOGGER, incremental):
     config = get_config(config_path)
     partition_date = end_date
     new_passengers_base_path = config["storageDetails"][5]["pathUrl"]
@@ -217,7 +220,7 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark, end_dat
                                        .withColumn("pLastName", phonetic_encode_udf(F.col("LastName"))) \
                                        .select("ProvisionalPrimaryKey","pFirstName","pLastName","DateOfBirth","passenger_hash")#.dropDuplicates()
         observed_passengers.cache()
-        old_passengers = spark.read.option("basePath",new_passengers_base_path).parquet(*get_old_passengers_paths(new_passengers_base_path)).drop("p_date").withColumnRenamed("DateOfBirth","DateOfBirth_r").withColumnRenamed("passenger_hash","passenger_hash_r")
+        old_passengers = spark.read.option("basePath",new_passengers_base_path).parquet(*get_old_passengers_paths(new_passengers_base_path,day0_date,end_date)).drop("p_date").withColumnRenamed("DateOfBirth","DateOfBirth_r").withColumnRenamed("passenger_hash","passenger_hash_r")
 
         retained_passengers = old_passengers.join(observed_passengers, ["pFirstName","pLastName"])\
                                             .withColumn("dateSim", get_date_similarity(F.col("DateOfBirth"), F.col("DateOfBirth_r")))\

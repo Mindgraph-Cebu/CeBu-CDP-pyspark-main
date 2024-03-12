@@ -25,6 +25,22 @@ import pandas as pd
 from pyspark.sql.functions import year, when, floor
 import boto3
 
+def get_paths(day0_date,end_date,path,LOGGER):
+    bucket_name = path.split("/")[2]
+    prefix = "ucp/"
+    s3 = boto3.client('s3')
+    response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix, Delimiter='/')
+
+    
+    paths = []
+    for common_prefix in response.get('CommonPrefixes', []):
+        folder_name = common_prefix['Prefix']
+        date_str = folder_name.split("=")[-1].rstrip('/')
+        if day0_date <= date_str <= end_date:
+            s3_path = 's3a://{}/ucp/p_date={}/'.format(bucket_name,date_str)
+            paths.append(s3_path)
+    return paths
+
 
 def get_config(file_path):
     # file_path = "s3a://cebu-cdp-data-qa/script/glue/cebu-cdp-profile-glue/profile_config_cebu_v1.json"
@@ -413,11 +429,13 @@ def main_agg_compute(spark, df, save_path_prefix):
     result2.write.parquet(save_path_prefix + "/revenue_breakdown", mode="overwrite")
 
 
-def compute_ui(config_path, spark, profile_path, LOGGER):
+def compute_ui(config_path, spark, profile_path, LOGGER,day0_date):
     LOGGER.info("ccai Starting compute_ui")
     config = get_config(config_path)
     num_cores = spark.sparkContext.defaultParallelism
 
+    end_date = profile_path.split("=")[1].strip('/')
+    LOGGER.info(f"end date - {end_date}, day0_date - {day0_date}")
     spark.conf.set("spark.sql.shuffle.partitions", num_cores * 2)
     spark.conf.set("spark.sql.autoBroadcastJoinThreshold", -1)
     spark.conf.set("spark.sql.files.maxRecordsPerFile", 100000)
@@ -429,7 +447,11 @@ def compute_ui(config_path, spark, profile_path, LOGGER):
     spark.udf.register("booker_timeline_new", booker_timeline_new)
     spark.udf.register("passenger_timeline_new", passenger_timeline_new)
 
-    df = spark.read.parquet(profile_path).select(
+    partition_paths = get_paths(day0_date,end_date,profile_path,LOGGER)
+
+    LOGGER.info(f"ccai - ucp loaded partitions = {str(partition_paths)}")
+
+    df = spark.read.parquet(*partition_paths).select(
         "ProvisionalPrimaryKey",
         "PersonID",
         "PassengerID",
@@ -472,6 +494,12 @@ def compute_ui(config_path, spark, profile_path, LOGGER):
         "RecordLocator",
         "IsCsp"
     )
+    record_count = df.count()
+    LOGGER.info("ccai -> Load Data : {} rows".format( record_count))
+    df = df.dropDuplicates(subset = ['PassengerID'])
+    record_count = df.count()
+    LOGGER.info("ccai -> Load Data after dropping dups : {} rows".format( record_count))
+    
     exchange_rates = {
         "THB": 0.657845,
         "AED": 13.203984,
