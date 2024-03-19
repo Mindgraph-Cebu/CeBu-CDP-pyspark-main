@@ -198,8 +198,8 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
                                                F.col("passenger_hash").alias("passenger_hash"))\
                                        .filter("(FirstName not in ('{}')) and (LastName not in ('{}'))".format("','".join(firstname_filters), "','".join(lastname_filters)))\
                                        .withColumn("pFirstName",F.trim(F.regexp_replace(F.regexp_replace(F.col("FirstName"), "\.", " "), "^(mr|ms|dr|rev|prof|sir|madam|miss|mrs|st)", "")))\
-                                       .withColumn("pFirstName", phonetic_encode_udf(F.split(F.col("pFirstName"), " ").getItem(0)) )\
-                                       .withColumn("pLastName", phonetic_encode_udf(F.col("LastName"))) \
+                                       .withColumn("pFirstName", F.lower(phonetic_encode_udf(F.split(F.col("pFirstName"), " ").getItem(0))) )\
+                                       .withColumn("pLastName", F.lower(phonetic_encode_udf(F.col("LastName")))) \
                                        .select("pFirstName","pLastName","DateOfBirth","passenger_hash").dropDuplicates()
 
         new_passengers.write.parquet(new_passengers_base_path+"/p_date={}".format(partition_date), mode='overwrite')
@@ -216,8 +216,8 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
                                                F.col("ProvisionalPrimaryKey").alias("ProvisionalPrimaryKey"))\
                                        .filter("(FirstName not in ('{}')) and (LastName not in ('{}'))".format("','".join(firstname_filters), "','".join(lastname_filters)))\
                                        .withColumn("pFirstName",F.trim(F.regexp_replace(F.regexp_replace(F.col("FirstName"), "\.", " "), "^(mr|ms|dr|rev|prof|sir|madam|miss|mrs|st)", "")))\
-                                       .withColumn("pFirstName", phonetic_encode_udf(F.split(F.col("pFirstName"), " ").getItem(0)) )\
-                                       .withColumn("pLastName", phonetic_encode_udf(F.col("LastName"))) \
+                                       .withColumn("pFirstName", F.lower(phonetic_encode_udf(F.split(F.col("pFirstName"), " ").getItem(0))) )\
+                                       .withColumn("pLastName", F.lower(phonetic_encode_udf(F.col("LastName")))) \
                                        .select("ProvisionalPrimaryKey","pFirstName","pLastName","DateOfBirth","passenger_hash")#.dropDuplicates()
         observed_passengers.cache()
         old_passengers = spark.read.option("basePath",new_passengers_base_path).parquet(*get_old_passengers_paths(new_passengers_base_path,day0_date,end_date)).drop("p_date").withColumnRenamed("DateOfBirth","DateOfBirth_r").withColumnRenamed("passenger_hash","passenger_hash_r")
@@ -231,6 +231,8 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
         passenger_hash_overrides.cache()
         
         new_passengers = observed_passengers.join(retained_passengers, "ProvisionalPrimaryKey", "left_anti").drop("ProvisionalPrimaryKey").dropDuplicates()
+        new_passengers.cache()
+        LOGGER.info("ccai -> Num New Passengers Rows/Records : "+ str(new_passengers.count()))
         df_profile.join(passenger_hash_overrides, ["passenger_hash"], "left").withColumn("passenger_hash", F.coalesce("passenger_hash_r","passenger_hash")).drop("passenger_hash_r").write.parquet(ucp_path, mode="overwrite")
         new_passengers.write.parquet(new_passengers_base_path+"/p_date={}".format(partition_date), mode='overwrite')
 
