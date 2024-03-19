@@ -34,7 +34,7 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark, partiti
 
     ##change1
     df_profile = df_profile.withColumn("mfirstname", when(col("firstname").isNotNull(), lower(col("firstname"))).otherwise("Unknown"))
-    df_profile = df_profile.withColumn("mlastname", when(col("lastname").isNotNull(), lower(col("firstname"))).otherwise("Unknown"))
+    df_profile = df_profile.withColumn("mlastname", when(col("lastname").isNotNull(), lower(col("lastname"))).otherwise("Unknown"))
 
     df_profile = df_profile.withColumn("passenger_hash", F.max("passenger_hash").over(W().partitionBy("mfirstname","mlastname","dateofbirth")))
 
