@@ -278,7 +278,7 @@ def compute_dedupe(config_path, spark, end_date, LOGGER, loaded_dob_graph):
     # df = df.withColumn("pFirstName", F.trim( F.split(F.col("pFirstName"), " ").getItem(0) ))
     df = df.withColumn(
         "pLastName",
-        F.when(F.col("DateOfBirth").like("9999%"), F.lower("pFirstName")).otherwise(F.trim(phonetic_encode_udf(F.lower("LastName"))))
+        F.when(F.col("DateOfBirth").like("9999%"), F.lower("LastName")).otherwise(F.trim(phonetic_encode_udf(F.lower("LastName"))))
     )
     # df_booker = df_booker.repartition(200)
     # df_booker = df_booker.withColumn("pBookerFirstName", F.lower(F.regexp_replace(F.col("BookerFirstName"), "[^a-zA-Z0-9]", "")))
