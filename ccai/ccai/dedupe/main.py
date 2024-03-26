@@ -142,18 +142,18 @@ def compute_dedupe(config_path, spark, end_date, LOGGER, loaded_dob_graph):
             F.col("DateOfBirth")
         ),
     )
-    df = df.withColumn(
-        "DateOfBirth",
-        F.when(F.col("DateOfBirth").substr(0, 4) > "3000", CCAI_NULL).otherwise(
-            F.col("DateOfBirth")
-        ),
-    )
-    df = df.withColumn(
-        "DateOfBirth",
-        F.when(F.col("DateOfBirth").like("9999%"), CCAI_NULL).otherwise(
-            F.col("DateOfBirth")
-        ),
-    )
+    # df = df.withColumn(
+    #     "DateOfBirth",
+    #     F.when(F.col("DateOfBirth").substr(0, 4) > "3000", CCAI_NULL).otherwise(
+    #         F.col("DateOfBirth")
+    #     ),
+    # )
+    # df = df.withColumn(
+    #     "DateOfBirth",
+    #     F.when(F.col("DateOfBirth").like("9999%"), CCAI_NULL).otherwise(
+    #         F.col("DateOfBirth")
+    #     ),
+    # )
     df = df.withColumn(
         "DateOfBirth",
         F.when(F.col("DateOfBirth").like("%xxx%"), CCAI_NULL).otherwise(
@@ -400,7 +400,8 @@ def compute_dedupe(config_path, spark, end_date, LOGGER, loaded_dob_graph):
         ) as t2 on t1.firstname = t2.firstname and t1.lastname = t2.lastname
     """
 
-    dob_null_handler_new = "select firstname, lastname, max(dateofbirth) as dateofbirth_na from df_dedupe where (dateofbirth is not null) and (dateofbirth!='CCAI_NULL') and (dateofbirth not like '9999%') and (dateofbirth>='1947-01-01') and (dateofbirth<'2023-12-12') group by firstname, lastname"
+    # dob_null_handler_new = "select firstname, lastname, max(dateofbirth) as dateofbirth_na from df_dedupe where (dateofbirth is not null) and (dateofbirth!='CCAI_NULL') and (dateofbirth not like '9999%') and (dateofbirth>='1947-01-01') and (dateofbirth<'2023-12-12') group by firstname, lastname"
+    dob_null_handler_new = "select firstname, lastname, max(dateofbirth) as dateofbirth_na from df_dedupe where (dateofbirth is not null) and (dateofbirth!='CCAI_NULL') and (dateofbirth>='1947-01-01') and (dateofbirth<'2023-12-12') group by firstname, lastname"
     # df.createOrReplaceTempView("df_dedupe")
     df = df.join(spark.sql(dob_null_handler_new), ['firstname', 'lastname'], "left").withColumn("dateofbirth",F.coalesce("dateofbirth","dateofbirth_na")).drop("dateofbirth_na")
     from pyspark.sql.window import Window
