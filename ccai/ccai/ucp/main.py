@@ -191,7 +191,7 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
 
 
 
-        new_passengers = df_profile_out.filter("(FirstName is not null) and (LastName is not null) and (DateOfBirth is not null) and (DateOfBirth>='1947') and (DateOfBirth<'3000') and (DateOfBirth not like '9999%') and (DateOfBirth not like '%xxx%')")\
+        new_passengers = df_profile_out.filter("(FirstName is not null) and (LastName is not null) and (DateOfBirth is not null) and (DateOfBirth>='1947') and (DateOfBirth not like '%xxx%')")\
                                        .select(F.lower(F.regexp_replace(unidecode_encode("FirstName"), "[^a-zA-Z0-9 ]", "")).alias("FirstName"),
                                                F.lower(F.regexp_replace(unidecode_encode("LastName"), "[^a-zA-Z0-9 ]", "")).alias("LastName"),
                                                F.col("DateOfBirth").alias("DateOfBirth"),
@@ -208,7 +208,7 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
         LOGGER.info("ccai -> ucp incremental started")
         df_profile.cache()
         profile_count_init = df_profile.count()
-        observed_passengers = df_profile.filter("(FirstName is not null) and (LastName is not null) and (DateOfBirth is not null) and (DateOfBirth>='1947') and (DateOfBirth<'3000') and (DateOfBirth not like '9999%') and (DateOfBirth not like '%xxx%')")\
+        observed_passengers = df_profile.filter("(FirstName is not null) and (LastName is not null) and (DateOfBirth is not null) and (DateOfBirth>='1947') and (DateOfBirth not like '%xxx%')")\
                                        .select(F.lower(F.regexp_replace(unidecode_encode("FirstName"), "[^a-zA-Z0-9 ]", "")).alias("FirstName"),
                                                F.lower(F.regexp_replace(unidecode_encode("LastName"), "[^a-zA-Z0-9 ]", "")).alias("LastName"),
                                                F.col("DateOfBirth").alias("DateOfBirth"),
