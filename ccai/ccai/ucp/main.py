@@ -198,7 +198,7 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
                                                F.col("passenger_hash").alias("passenger_hash"))\
                                        .filter("(FirstName not in ('{}')) and (LastName not in ('{}'))".format("','".join(firstname_filters), "','".join(lastname_filters)))\
                                        .withColumn("pFirstName",F.trim(F.regexp_replace(F.regexp_replace(F.col("FirstName"), "\.", " "), "^(mr|ms|dr|rev|prof|sir|madam|miss|mrs|st)", "")))\
-                                       .withColumn("pFirstName", F.trim(F.lower(phonetic_encode_udf(F.col("pFirstName"))) ))\
+                                       .withColumn("pFirstName", F.trim( F.split(F.lower(phonetic_encode_udf(F.col("pFirstName"))), " ").getItem(0) ))\
                                        .withColumn("pLastName", F.trim(F.lower(phonetic_encode_udf(F.col("LastName"))))) \
                                        .select("pFirstName","pLastName","DateOfBirth","passenger_hash").dropDuplicates()
 
@@ -216,7 +216,7 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
                                                F.col("ProvisionalPrimaryKey").alias("ProvisionalPrimaryKey"))\
                                        .filter("(FirstName not in ('{}')) and (LastName not in ('{}'))".format("','".join(firstname_filters), "','".join(lastname_filters)))\
                                        .withColumn("pFirstName",F.trim(F.regexp_replace(F.regexp_replace(F.col("FirstName"), "\.", " "), "^(mr|ms|dr|rev|prof|sir|madam|miss|mrs|st)", "")))\
-                                       .withColumn("pFirstName", F.trim(F.lower(phonetic_encode_udf(F.col("pFirstName")) )))\
+                                       .withColumn("pFirstName", F.trim( F.split(F.lower(phonetic_encode_udf(F.col("pFirstName")))," ").getItem(0) ))\
                                        .withColumn("pLastName", F.trim(F.lower(phonetic_encode_udf(F.col("LastName"))))) \
                                        .select("ProvisionalPrimaryKey","pFirstName","pLastName","DateOfBirth","passenger_hash")#.dropDuplicates()
         observed_passengers.cache()
