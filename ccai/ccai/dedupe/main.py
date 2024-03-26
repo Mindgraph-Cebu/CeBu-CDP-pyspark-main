@@ -269,7 +269,7 @@ def compute_dedupe(config_path, spark, end_date, LOGGER, loaded_dob_graph):
         ),
     )
     df = df.withColumn("pFirstName", F.trim(F.col("pFirstName")))
-    df = df.withColumn("pFirstName", F.split(F.col("pFirstName"), " ").getItem(0))
+    # df = df.withColumn("pFirstName", F.trim(F.col("pFirstName"), " ").getItem(0))
     df = df.withColumn(
         "pFirstName",
         F.udf(lambda x: phonetic_encode(sm, x), T.StringType())(F.col("pFirstName")),
