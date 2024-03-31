@@ -141,18 +141,18 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
             F.col("DateOfBirth")
         ),
     )
-    df = df.withColumn(
-        "DateOfBirth",
-        F.when(F.col("DateOfBirth").substr(0, 4) > "3000", CCAI_NULL).otherwise(
-            F.col("DateOfBirth")
-        ),
-    )
-    df = df.withColumn(
-        "DateOfBirth",
-        F.when(F.col("DateOfBirth").like("9999%"), CCAI_NULL).otherwise(
-            F.col("DateOfBirth")
-        ),
-    )
+    # df = df.withColumn(
+    #     "DateOfBirth",
+    #     F.when(F.col("DateOfBirth").substr(0, 4) > "3000", CCAI_NULL).otherwise(
+    #         F.col("DateOfBirth")
+    #     ),
+    # )
+    # df = df.withColumn(
+    #     "DateOfBirth",
+    #     F.when(F.col("DateOfBirth").like("9999%"), CCAI_NULL).otherwise(
+    #         F.col("DateOfBirth")
+    #     ),
+    # )
     df = df.withColumn(
         "DateOfBirth",
         F.when(F.col("DateOfBirth").like("%xxx%"), CCAI_NULL).otherwise(
@@ -268,14 +268,24 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
         ),
     )
     df = df.withColumn("pFirstName", F.trim(F.col("pFirstName")))
-    df = df.withColumn("pFirstName", F.split(F.col("pFirstName"), " ").getItem(0))
+    # F.when(F.col("DateOfBirth").like("9999%"), CCAI_NULL).otherwise()
+    phonetic_encode_udf = F.udf(lambda x: phonetic_encode(sm, x), T.StringType())
+    # df = df.withColumn(
+    #     "pFirstName",
+    #     F.when(F.col("DateOfBirth").like("9999%"), F.lower("pFirstName")).otherwise(F.trim( F.split(phonetic_encode_udf(F.lower("pFirstName"))).getItem(0) ))
+    # )
     df = df.withColumn(
-        "pFirstName",
-        F.udf(lambda x: phonetic_encode(sm, x), T.StringType())(F.col("pFirstName")),
+    "pFirstName",
+    F.when(F.col("DateOfBirth").like("9999%"),
+           F.lower("pFirstName")
+          ).otherwise(
+           F.trim(F.split(phonetic_encode_udf(F.lower("pFirstName")), " ").getItem(0))
+          )
     )
+    # df = df.withColumn("pFirstName", F.trim( F.split(F.col("pFirstName"), " ").getItem(0) ))
     df = df.withColumn(
         "pLastName",
-        F.udf(lambda x: phonetic_encode(sm, x), T.StringType())(F.col("LastName")),
+        F.when(F.col("DateOfBirth").like("9999%"), F.lower("LastName")).otherwise(F.trim(phonetic_encode_udf(F.lower("LastName"))))
     )
     # df_booker = df_booker.repartition(200)
     # df_booker = df_booker.withColumn("pBookerFirstName", F.lower(F.regexp_replace(F.col("BookerFirstName"), "[^a-zA-Z0-9]", "")))
@@ -398,7 +408,8 @@ def compute_dedupe(config_path, spark, partition_date, LOGGER, loaded_dob_graph)
         ) as t2 on t1.firstname = t2.firstname and t1.lastname = t2.lastname
     """
 
-    dob_null_handler_new = "select firstname, lastname, max(dateofbirth) as dateofbirth_na from df_dedupe where (dateofbirth is not null) and (dateofbirth!='CCAI_NULL') and (dateofbirth not like '9999%') and (dateofbirth>='1947-01-01') and (dateofbirth<'2023-12-12') group by firstname, lastname"
+    # dob_null_handler_new = "select firstname, lastname, max(dateofbirth) as dateofbirth_na from df_dedupe where (dateofbirth is not null) and (dateofbirth!='CCAI_NULL') and (dateofbirth not like '9999%') and (dateofbirth>='1947-01-01') and (dateofbirth<'2023-12-12') group by firstname, lastname"
+    dob_null_handler_new = "select firstname, lastname, max(dateofbirth) as dateofbirth_na from df_dedupe where (dateofbirth is not null) and (dateofbirth!='CCAI_NULL') and (dateofbirth>='1947-01-01') and (dateofbirth<'2023-12-12') group by firstname, lastname"
     # df.createOrReplaceTempView("df_dedupe")
     df = df.join(spark.sql(dob_null_handler_new), ['firstname', 'lastname'], "left").withColumn("dateofbirth",F.coalesce("dateofbirth","dateofbirth_na")).drop("dateofbirth_na")
     from pyspark.sql.window import Window
