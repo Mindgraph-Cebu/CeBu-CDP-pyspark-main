@@ -198,9 +198,12 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
                                                F.col("passenger_hash").alias("passenger_hash"))\
                                        .filter("(FirstName not in ('{}')) and (LastName not in ('{}'))".format("','".join(firstname_filters), "','".join(lastname_filters)))\
                                        .withColumn("pFirstName",F.trim(F.regexp_replace(F.regexp_replace(F.col("FirstName"), "\.", " "), "^(mr|ms|dr|rev|prof|sir|madam|miss|mrs|st)", "")))\
-                                       .withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("pFirstName")).otherwise(F.trim(F.split(phonetic_encode_udf(F.lower("pFirstName")), " ").getItem(0))))\
+                                       .withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"),F.lower("pFirstName")).otherwise(F.trim(phonetic_encode_udf(F.split(F.lower("pFirstName"), " ").getItem(0))))) \
                                        .withColumn("pLastName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("LastName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.col("LastName")))))) \
                                        .select("pFirstName","pLastName","DateOfBirth","passenger_hash").dropDuplicates()
+        
+        #.withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("pFirstName")).otherwise(F.trim(F.split(phonetic_encode_udf(F.lower("pFirstName")), " ").getItem(0))))
+
 
         new_passengers.write.parquet(new_passengers_base_path+"/p_date={}".format(partition_date), mode='overwrite')
 
@@ -216,7 +219,7 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
                                                F.col("ProvisionalPrimaryKey").alias("ProvisionalPrimaryKey"))\
                                        .filter("(FirstName not in ('{}')) and (LastName not in ('{}'))".format("','".join(firstname_filters), "','".join(lastname_filters)))\
                                        .withColumn("pFirstName",F.trim(F.regexp_replace(F.regexp_replace(F.col("FirstName"), "\.", " "), "^(mr|ms|dr|rev|prof|sir|madam|miss|mrs|st)", "")))\
-                                       .withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("pFirstName")).otherwise(F.trim(F.split(phonetic_encode_udf(F.lower("pFirstName")), " ").getItem(0))))\
+                                       .withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"),F.lower("pFirstName")).otherwise(F.trim(phonetic_encode_udf(F.split(F.lower("pFirstName"), " ").getItem(0)))))\
                                        .withColumn("pLastName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("LastName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.col("LastName")))))) \
                                        .select("ProvisionalPrimaryKey","pFirstName","pLastName","DateOfBirth","passenger_hash")#.dropDuplicates()
         observed_passengers.cache()

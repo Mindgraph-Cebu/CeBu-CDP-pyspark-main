@@ -275,14 +275,27 @@ def compute_dedupe(config_path, spark, end_date, LOGGER, loaded_dob_graph):
     #     "pFirstName",
     #     F.when(F.col("DateOfBirth").like("9999%"), F.lower("pFirstName")).otherwise(F.trim( F.split(phonetic_encode_udf(F.lower("pFirstName"))).getItem(0) ))
     # )
+
+    #commented to check
+    # df = df.withColumn(
+    # "pFirstName",
+    # F.when(F.col("DateOfBirth").like("9999%"),
+    #        F.lower("pFirstName")
+    #       ).otherwise(
+    #        F.trim(F.split(phonetic_encode_udf(F.lower("pFirstName")), " ").getItem(0))
+    #       )
+    # )
+
     df = df.withColumn(
     "pFirstName",
-    F.when(F.col("DateOfBirth").like("9999%"),
-           F.lower("pFirstName")
-          ).otherwise(
-           F.trim(F.split(phonetic_encode_udf(F.lower("pFirstName")), " ").getItem(0))
-          )
-    )
+    F.when(
+        F.col("DateOfBirth").like("9999%"),
+        F.lower("pFirstName")
+    ).otherwise(
+        F.trim(phonetic_encode_udf(F.split(F.lower("pFirstName"), " ").getItem(0)))
+    ))
+
+
     # df = df.withColumn("pFirstName", F.trim( F.split(F.col("pFirstName"), " ").getItem(0) ))
     df = df.withColumn(
         "pLastName",
