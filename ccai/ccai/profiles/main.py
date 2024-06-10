@@ -34,28 +34,28 @@ def get_config(file_path):
     return config
 
 
-# def get_latest_partition(path, key, partition_date):
-#     # initiate s3 client
-#     s3 = boto3.client('s3')
-#     # get bucket name and prefix
-#     bucket_name = path.split('/')[2]
-#     prefix = '/'.join(path.split('/')[3:]) + '/'
-#     # bucket_name = 'edw-dl-process-data-dev'
-#     # prefix = 'data/odstest/hdata/odstest_all_diffen_open/odstest_all_booking/'
-#     # get all sub folfers names in the path
-#     response = s3.list_objects_v2(
-#         Bucket=bucket_name, Prefix=prefix, Delimiter='/')
+def get_latest_partition_date(path, key, partition_date):
+    # initiate s3 client
+    s3 = boto3.client('s3')
+    # get bucket name and prefix
+    bucket_name = path.split('/')[2]
+    prefix = '/'.join(path.split('/')[3:]) + '/'
+    # bucket_name = 'edw-dl-process-data-dev'
+    # prefix = 'data/odstest/hdata/odstest_all_diffen_open/odstest_all_booking/'
+    # get all sub folfers names in the path
+    response = s3.list_objects_v2(
+        Bucket=bucket_name, Prefix=prefix, Delimiter='/')
 
-#     dates = []
-#     for page in response['CommonPrefixes']:
-#         if key in page['Prefix'].split('/')[-2]:
-#             # print(page['Prefix'].split('/')[-2])
-#             if partition_date in page['Prefix'].split('/')[-2]:
-#                 return key + '=' + page['Prefix'].split('/')[-2].split('=')[1]
-#             dates.append(page['Prefix'].split('/')[-2])
-#     # sort dates in descending order
-#     dates.sort(reverse=True)
-#     return dates[0]
+    dates = []
+    for page in response['CommonPrefixes']:
+        if key in page['Prefix'].split('/')[-2]:
+            # print(page['Prefix'].split('/')[-2])
+            # if partition_date in page['Prefix'].split('/')[-2]:
+            #     return key + '=' + page['Prefix'].split('/')[-2].split('=')[1]
+            dates.append(page['Prefix'].split('/')[-2])
+    # sort dates in descending order
+    dates.sort(reverse=True)
+    return dates[0]
 
 
 def filter_tables(config, source_dict, LOGGER):
@@ -154,82 +154,91 @@ def load_data_day0(config,spark,LOGGER,partition_date,archive_date):
             
 
                
-            open_paths = [
-                each_source['pathUrl'] + "/ods=" + date + "/"
-                for date in [partition_date, archive_date]
-            ]
+            # open_paths = [
+            #     each_source['pathUrl'] + "/ods=" + date + "/"
+            #     for date in [partition_date, archive_date]
+            # ]
 
-            if each_source['entityName'] == "all_booking":
-                open_df = spark.read.load(
-                    open_paths[0], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-                open_df = open_df.withColumn("Source",F.lit("Open"))
-                archive_df = spark.read.load(
-                    open_paths[1], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-                archive_df = archive_df.withColumn("Source",F.lit("Archive"))
-                source_dict[each_source['entityName']] = open_df.unionAll(archive_df)
-            else:
-                try:
-                    #try loading both partitions
-                    source_dict[each_source['entityName']] = spark.read.load(
-                        open_paths, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-                    record_count = source_dict[each_source['entityName']].count()
-                    LOGGER.info("ccai -> Load Data b&a - {} : {} rows".format(each_source['entityName'], record_count))
-                except:
-                    #try loading business date partition
-                    source_dict[each_source['entityName']] = spark.read.load(
-                        open_paths[0], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-                    record_count = source_dict[each_source['entityName']].count()
-                    LOGGER.info("ccai -> Load Data b - {} : {} rows".format(each_source['entityName'], record_count))
+            # if each_source['entityName'] == "all_booking":
+            #     open_df = spark.read.load(
+            #         open_paths[0], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+            #     open_df = open_df.withColumn("Source",F.lit("Open"))
+            #     archive_df = spark.read.load(
+            #         open_paths[1], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+            #     archive_df = archive_df.withColumn("Source",F.lit("Archive"))
+            #     source_dict[each_source['entityName']] = open_df.unionAll(archive_df)
+            # else:
+            #     try:
+            #         #try loading both partitions
+            #         source_dict[each_source['entityName']] = spark.read.load(
+            #             open_paths, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+            #         record_count = source_dict[each_source['entityName']].count()
+            #         LOGGER.info("ccai -> Load Data b&a - {} : {} rows".format(each_source['entityName'], record_count))
+            #     except:
+            #         #try loading business date partition
+            #         source_dict[each_source['entityName']] = spark.read.load(
+            #             open_paths[0], format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+            #         record_count = source_dict[each_source['entityName']].count()
+            #         LOGGER.info("ccai -> Load Data b - {} : {} rows".format(each_source['entityName'], record_count))
                 
         
-            #get available non open partitions
-            path = each_source['pathUrl'].replace("open","nonopen")
-            resource_name = each_source['entityName']
+            # #get available non open partitions
+            # path = each_source['pathUrl'].replace("open","nonopen")
+            # resource_name = each_source['entityName']
 
-            non_open_sources = ["all_booking","all_passengerjourneysegment","all_passengerfee","all_passengerjourneyleg"]
-            if each_source['entityName'] in non_open_sources:
-                path = each_source['pathUrl'] + "version"  
-                resource_name = each_source['entityName'] + "version"
-                path = path.replace("open","nonopen")
+            # non_open_sources = ["all_booking","all_passengerjourneysegment","all_passengerfee","all_passengerjourneyleg"]
+            # if each_source['entityName'] in non_open_sources:
+            #     path = each_source['pathUrl'] + "version"  
+            #     resource_name = each_source['entityName'] + "version"
+            #     path = path.replace("open","nonopen")
 
-            exe = "/nds="
+            # exe = "/nds="
 
-            bucket,prefix = get_bucket(path,resource_name)
-            available_partitions = list_folders_in_path(bucket, prefix,LOGGER,archive_date,partition_date)
-            partition_paths = getpaths(available_partitions,resource_name,path,exe)
+            # bucket,prefix = get_bucket(path,resource_name)
+            # available_partitions = list_folders_in_path(bucket, prefix,LOGGER,archive_date,partition_date)
+            # partition_paths = getpaths(available_partitions,resource_name,path,exe)
             
   
-            #load only if partitions are available
-            if partition_paths:
-                ##should edit
-                non_open_df = spark.read.load(
-                        partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').select(column_list[each_source['entityName']])
+            # #load only if partitions are available
+            # if partition_paths:
+            #     ##should edit
+            #     non_open_df = spark.read.load(
+            #             partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').select(column_list[each_source['entityName']])
 
-                if each_source['entityName'] in non_open_sources:
-                    non_open_df = spark.read.load(
-                        partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').where("VersionEndUTC == '9999-12-31 00:00:00.000'").select(column_list[each_source['entityName']])
+            #     if each_source['entityName'] in non_open_sources:
+            #         non_open_df = spark.read.load(
+            #             partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').where("VersionEndUTC == '9999-12-31 00:00:00.000'").select(column_list[each_source['entityName']])
 
-                if each_source['entityName'] == "all_booking":
-                    non_open_df = non_open_df.withColumn("Source",F.lit("NonOpen"))
+            #     if each_source['entityName'] == "all_booking":
+            #         non_open_df = non_open_df.withColumn("Source",F.lit("NonOpen"))
 
 
-                source_dict[each_source['entityName']] = source_dict[each_source['entityName']].unionAll(non_open_df)
-                record_count = non_open_df.count()
-                LOGGER.info("ccai -> Load Data non open  - {} : {} rows".format(resource_name, record_count))
-            if each_source['entityName'] == "all_booking":    
-                columns = source_dict[each_source['entityName']].columns
-                LOGGER.info(f"{each_source['entityName']} columns - {str(columns)}")
-            record_count = source_dict[each_source['entityName']].count()
-            LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
-            LOGGER.info(f"{each_source['entityName']} loaded successfully")
-
-            ##<------- open-------->##
-            # source_dict[each_source['entityName']] = spark.read.load(
-            #         each_source['pathUrl'] + "/" + "ods=" +partition_date, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
-            # if each_source['entityName'] == "all_booking":
-            #     source_dict[each_source['entityName']] = source_dict[each_source['entityName']].withColumn("Source",F.lit("Open"))
+            #     source_dict[each_source['entityName']] = source_dict[each_source['entityName']].unionAll(non_open_df)
+            #     record_count = non_open_df.count()
+            #     LOGGER.info("ccai -> Load Data non open  - {} : {} rows".format(resource_name, record_count))
+            # if each_source['entityName'] == "all_booking":    
+            #     columns = source_dict[each_source['entityName']].columns
+            #     LOGGER.info(f"{each_source['entityName']} columns - {str(columns)}")
             # record_count = source_dict[each_source['entityName']].count()
             # LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
+            # LOGGER.info(f"{each_source['entityName']} loaded successfully")
+
+            ##<------- open-------->##
+            if each_source['entityName'] == "all_currencyconversionhistory":
+                latest_partition = get_latest_partition_date(
+                each_source['pathUrl'], each_source['partitionDetails']['partitionColumn'][0], partition_date)
+                LOGGER.info("ccai -> Partition Date - {} : {} ".format(each_source['entityName'],latest_partition ))
+                source_dict[each_source['entityName']] = spark.read.load(
+                    each_source['pathUrl'] + "/"  +latest_partition, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+                
+            else:
+                LOGGER.info(f"ccai -> Partition Date - {each_source['entityName']} : {str(partition_date)}")
+                source_dict[each_source['entityName']] = spark.read.load(
+                    each_source['pathUrl'] + "/" + "ods=" +partition_date, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+            if each_source['entityName'] == "all_booking":
+                source_dict[each_source['entityName']] = source_dict[each_source['entityName']].withColumn("Source",F.lit("Open"))
+            record_count = source_dict[each_source['entityName']].count()
+            LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
 
     source_dict = filter_tables(config, source_dict,LOGGER)
 
@@ -1102,50 +1111,6 @@ def fillNa(config, profile_df, spark):
     return profile_df
 
 
-#change 2
-
-
-# def get_df(config,spark,partition_date,archive_date,LOGGER):
-#         # load open partitions - archive and a business date
-#     open_dates = [partition_date,archive_date]
-
-#     open_paths = []
-#     for date in open_dates:
-#         path = config["voucherPath"].replace("nonopen","open") + "/ods=" + date + "/"
-#         open_paths.append(path)
-
-#     try:
-#         #try loading both partitions
-#         voucher_df = spark.read.load(
-#             open_paths, format="orc")
-#     except:
-#         #try loading business date partition
-#         voucher_df = spark.read.load(
-#             open_paths[0], format="orc")
-        
-
-#     #get available non open partitions
-#     bucket,prefix = get_bucket(config,"all_voucher")
-#     available_partitions = list_folders_in_path(bucket, prefix,LOGGER,archive_date,partition_date)
-#     partition_paths = getpaths(available_partitions,"all_voucher",config["voucherPath"])
-
-
-#     #load only if partitions are available
-#     if partition_paths:
-#         ##load non open partitions
-#         non_open_df = spark.read.load(
-#             partition_paths, format="orc").where('c_operationtype = "D"')
-#         voucher_df = voucher_df.unionAll(non_open_df)
-
-#     record_count = voucher_df.count()
-#     LOGGER.info("ccai -> Load Data - {} : {} rows".format("voucher_df", record_count))
-#     LOGGER.info("voucher_df loaded successfully")
-
-
-
-#     return voucher_df
-
-
 def add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy):
 
     LOGGER.info("ccai - Processing CSP transactions")
@@ -1199,7 +1164,30 @@ def ignore_bookings(source_dict_copy, profile_df, LOGGER):
 
     return profile_df
 
-
+def cal_revenue(profile_df,source_dict_copy,spark):
+    profile_df.createOrReplaceTempView("profiles") 
+    source_dict_copy["all_currencyconversionhistory"].createOrReplaceTempView("currencyconversionhistory") 
+    # query = "select *,ch.conversionrate as currency_conversion_rate,case when p.BookingCurrency != 'PHP' then ROUND(p.Revenue * ch.conversionrate,2) else ROUND(p.Revenue,2) END AS totalrevPHP from profiles p left join currencyconversionhistory ch ON p.BookingCurrency = ch.fromcurrencycode  and cast(SUBSTRING(p.bookingdate, 1, 10) as date) = CAST(ch.versionstartutc AS DATE) AND CAST(ch.versionendutc AS DATE) = CAST('9999-12-31' AS DATE) and ch.tocurrencycode = 'PHP'"
+    query = """
+            SELECT 
+                p.*, 
+                ch.conversionrate AS currency_conversion_rate,
+                CASE 
+                    WHEN p.BookingCurrency != 'PHP' 
+                        THEN ROUND(p.Revenue * ch.conversionrate, 2) 
+                    ELSE ROUND(p.Revenue, 2) 
+                END AS totalrevPHP 
+            FROM 
+                profiles p 
+            LEFT JOIN 
+                currencyconversionhistory ch 
+            ON 
+                p.BookingCurrency = ch.fromcurrencycode 
+                AND CAST(CAST(p.bookingdate AS TIMESTAMP) + INTERVAL 8 HOURS AS DATE) = CAST(ch.versionstartutc AS DATE) 
+                AND ch.tocurrencycode = 'PHP'
+            """
+    profile_df = spark.sql(query)
+    return profile_df
 
 def compute_profile(config_path, spark,LOGGER,start_date,end_date,incremental):
     spark_conf(spark)
@@ -1295,8 +1283,8 @@ def compute_profile(config_path, spark,LOGGER,start_date,end_date,incremental):
     ########## CheckPoints-End #############
     
     # change 1
-    profile_df = profile_df.dropDuplicates(subset=["PassengerID"])
-    LOGGER.info("ccai - profile row count after dropping duplicates: " + str(profile_df.count()))
+
+    
 
     profile_df = add_csp(config, profile_df, spark, partition_date,LOGGER,source_dict_copy)
     LOGGER.info(f"ccai csp attribute added")
@@ -1306,9 +1294,14 @@ def compute_profile(config_path, spark,LOGGER,start_date,end_date,incremental):
     LOGGER.info(f"bookings ignored")
     LOGGER.info("ccai - profile row count: " + str(profile_df.count()))
 
+    profile_df = cal_revenue(profile_df,source_dict_copy,spark)
+    LOGGER.info("ccai - totalrevenue PHP calculated successfully")
 
+
+    profile_df = profile_df.dropDuplicates(subset=["PassengerID"])
+    LOGGER.info("ccai - profile row count after dropping duplicates: " + str(profile_df.count()))
     
-    profile_df = profile_df.withColumnRenamed("all_booking_Source", "Source")
+    # profile_df = profile_df.withColumnRenamed("all_booking_Source", "Source")
     
     save_path = config['storageDetails'][0]['pathUrl'] + \
         "/" + "p_date=" + partition_date
