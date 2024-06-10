@@ -269,18 +269,6 @@ def booker_compute(spark, df, save_path_prefix, LOGGER):
     LOGGER.info("bookerccai checkpoint-2 -> Result1 df sample : \n"+str(result1.limit(5).toPandas().to_csv(index=False)))
 
 
-    # result2 = spark.sql(
-    #     """
-    # SELECT PersonID, booker_timeline(collect_list(New_Revenue), collect_list(TravelDate),collect_list(BookingDate), collect_list(TravelOrigin), collect_list(TravelDestination), collect_list(TravelInsurance), collect_list(TravelBaggage), collect_list(TravelMeals), collect_list(BookingCurrency),collect_list(RecordLocator)) AS Details
-    # FROM (
-    #     SELECT PersonID,New_Revenue,TravelDate,BookingDate,TravelOrigin,TravelDestination,TravelDestination,TravelInsurance,TravelBaggage,TravelMeals,BookingCurrency,RecordLocator,
-    #         ROW_NUMBER() OVER (PARTITION BY PersonID ORDER BY TravelDate DESC) AS row_num
-    #     FROM cdp_profiles
-    # ) AS subquery
-    # WHERE row_num <= 1000
-    # GROUP BY PersonID
-    # """
-    # )
 
     result2 = spark.sql(
         """
@@ -303,7 +291,7 @@ def booker_compute(spark, df, save_path_prefix, LOGGER):
             ROW_NUMBER() OVER (PARTITION BY PersonID ORDER BY TravelDate DESC) AS row_num 
         FROM cdp_profiles
     ) AS subquery 
-    WHERE row_num <= 1000
+    WHERE row_num <= 250
     GROUP BY PersonID
     """
     )
@@ -403,7 +391,7 @@ def passenger_compute(spark, df, save_path_prefix, LOGGER):
             ROW_NUMBER() OVER (PARTITION BY passenger_hash ORDER BY TravelDate DESC) AS row_num 
         FROM cdp_profiles
     ) AS subquery 
-    WHERE row_num <= 1000
+    WHERE row_num <= 250
     GROUP BY passenger_hash
     """
     )
