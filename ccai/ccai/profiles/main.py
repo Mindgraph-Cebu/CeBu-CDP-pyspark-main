@@ -9,7 +9,8 @@ import pyspark.pandas as ps
 import random
 import numpy as np
 import datetime
-from pyspark.sql.functions import col,expr,when
+from pyspark.sql.functions import col,expr,when,lag, last,round as spark_round
+from pyspark.sql.window import Window
 
 
 
@@ -1167,16 +1168,28 @@ def ignore_bookings(source_dict_copy, profile_df, LOGGER):
 def cal_revenue(profile_df,source_dict_copy,spark):
     profile_df.createOrReplaceTempView("profiles") 
     source_dict_copy["all_currencyconversionhistory"].createOrReplaceTempView("currencyconversionhistory") 
-    # query = "select *,ch.conversionrate as currency_conversion_rate,case when p.BookingCurrency != 'PHP' then ROUND(p.Revenue * ch.conversionrate,2) else ROUND(p.Revenue,2) END AS totalrevPHP from profiles p left join currencyconversionhistory ch ON p.BookingCurrency = ch.fromcurrencycode  and cast(SUBSTRING(p.bookingdate, 1, 10) as date) = CAST(ch.versionstartutc AS DATE) AND CAST(ch.versionendutc AS DATE) = CAST('9999-12-31' AS DATE) and ch.tocurrencycode = 'PHP'"
+    # query = """
+    #         SELECT 
+    #             p.*, 
+    #             ch.conversionrate AS currency_conversion_rate,
+    #             CASE 
+    #                 WHEN p.BookingCurrency != 'PHP' 
+    #                     THEN ROUND(p.Revenue * ch.conversionrate, 2) 
+    #                 ELSE ROUND(p.Revenue, 2) 
+    #             END AS totalrevPHP 
+    #         FROM 
+    #             profiles p 
+    #         LEFT JOIN 
+    #             currencyconversionhistory ch 
+    #         ON 
+    #             p.BookingCurrency = ch.fromcurrencycode 
+    #             AND CAST(CAST(p.bookingdate AS TIMESTAMP) + INTERVAL 8 HOURS AS DATE) = CAST(ch.versionstartutc AS DATE) 
+    #             AND ch.tocurrencycode = 'PHP'
+    #         """
     query = """
             SELECT 
                 p.*, 
-                ch.conversionrate AS currency_conversion_rate,
-                CASE 
-                    WHEN p.BookingCurrency != 'PHP' 
-                        THEN ROUND(p.Revenue * ch.conversionrate, 2) 
-                    ELSE ROUND(p.Revenue, 2) 
-                END AS totalrevPHP 
+                ch.conversionrate AS currency_conversion_rate
             FROM 
                 profiles p 
             LEFT JOIN 
@@ -1186,7 +1199,14 @@ def cal_revenue(profile_df,source_dict_copy,spark):
                 AND CAST(CAST(p.bookingdate AS TIMESTAMP) + INTERVAL 8 HOURS AS DATE) = CAST(ch.versionstartutc AS DATE) 
                 AND ch.tocurrencycode = 'PHP'
             """
+    
     profile_df = spark.sql(query)
+    profile_df.createOrReplaceTempView("profiles") 
+    fill_missing_rates = "SELECT *,LAST_VALUE(currency_conversion_rate) IGNORE NULLS OVER (PARTITION BY bookingcurrency ORDER BY bookingdate) AS currency_conversion_rate_filled FROM profiles"
+    profile_df = spark.sql(fill_missing_rates)
+    profile_df = profile_df.withColumn("currency_conversion_rate",when(profile_df["currency_conversion_rate"].isNotNull(), profile_df["currency_conversion_rate"]).otherwise(profile_df["currency_conversion_rate_filled"]))    
+    profile_df = profile_df.withColumn("totalrevPHP",when(col("BookingCurrency") != "PHP", spark_round(col("Revenue") * col("currency_conversion_rate"), 2)).otherwise(spark_round(col("Revenue"), 2)))
+
     return profile_df
 
 def compute_profile(config_path, spark,LOGGER,start_date,end_date,incremental):
