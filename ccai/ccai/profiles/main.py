@@ -9,7 +9,7 @@ import pyspark.pandas as ps
 import random
 import numpy as np
 import datetime
-from pyspark.sql.functions import col,expr,when,lag, last,round as spark_round
+from pyspark.sql.functions import col,expr,when,lag, last,round as spark_round,lit
 from pyspark.sql.window import Window
 
 
@@ -230,7 +230,7 @@ def load_data_day0(config,spark,LOGGER,partition_date,archive_date):
                 each_source['pathUrl'], each_source['partitionDetails']['partitionColumn'][0], partition_date)
                 LOGGER.info("ccai -> Partition Date - {} : {} ".format(each_source['entityName'],latest_partition ))
                 source_dict[each_source['entityName']] = spark.read.load(
-                    each_source['pathUrl'] + "/"  +latest_partition, format=each_source['dataFormat']).select(column_list[each_source['entityName']])
+                    each_source['pathUrl'] + "/"  +latest_partition, format=each_source['dataFormat']).where("ToCurrencyCode == 'PHP'").select(column_list[each_source['entityName']])
                 
             else:
                 LOGGER.info(f"ccai -> Partition Date - {each_source['entityName']} : {str(partition_date)}")
@@ -1165,49 +1165,211 @@ def ignore_bookings(source_dict_copy, profile_df, LOGGER):
 
     return profile_df
 
-def cal_revenue(profile_df,source_dict_copy,spark):
-    profile_df.createOrReplaceTempView("profiles") 
-    source_dict_copy["all_currencyconversionhistory"].createOrReplaceTempView("currencyconversionhistory") 
-    # query = """
-    #         SELECT 
-    #             p.*, 
-    #             ch.conversionrate AS currency_conversion_rate,
-    #             CASE 
-    #                 WHEN p.BookingCurrency != 'PHP' 
-    #                     THEN ROUND(p.Revenue * ch.conversionrate, 2) 
-    #                 ELSE ROUND(p.Revenue, 2) 
-    #             END AS totalrevPHP 
-    #         FROM 
-    #             profiles p 
-    #         LEFT JOIN 
-    #             currencyconversionhistory ch 
-    #         ON 
-    #             p.BookingCurrency = ch.fromcurrencycode 
-    #             AND CAST(CAST(p.bookingdate AS TIMESTAMP) + INTERVAL 8 HOURS AS DATE) = CAST(ch.versionstartutc AS DATE) 
-    #             AND ch.tocurrencycode = 'PHP'
-    #         """
-    query = """
-            SELECT 
-                p.*, 
-                ch.conversionrate AS currency_conversion_rate
-            FROM 
-                profiles p 
-            LEFT JOIN 
-                currencyconversionhistory ch 
-            ON 
-                p.BookingCurrency = ch.fromcurrencycode 
-                AND CAST(CAST(p.bookingdate AS TIMESTAMP) + INTERVAL 8 HOURS AS DATE) = CAST(ch.versionstartutc AS DATE) 
-                AND ch.tocurrencycode = 'PHP'
-            """
-    
-    profile_df = spark.sql(query)
-    profile_df.createOrReplaceTempView("profiles") 
-    fill_missing_rates = "SELECT *,LAST_VALUE(currency_conversion_rate) IGNORE NULLS OVER (PARTITION BY bookingcurrency ORDER BY bookingdate) AS currency_conversion_rate_filled FROM profiles"
-    profile_df = spark.sql(fill_missing_rates)
-    profile_df = profile_df.withColumn("currency_conversion_rate",when(profile_df["currency_conversion_rate"].isNotNull(), profile_df["currency_conversion_rate"]).otherwise(profile_df["currency_conversion_rate_filled"]))    
-    profile_df = profile_df.withColumn("totalrevPHP",when(col("BookingCurrency") != "PHP", spark_round(col("Revenue") * col("currency_conversion_rate"), 2)).otherwise(spark_round(col("Revenue"), 2)))
+# def cal_revenue(profile_df,source_dict_copy,spark):
+#     profile_df.createOrReplaceTempView("profiles") 
+#     source_dict_copy["all_currencyconversionhistory"].createOrReplaceTempView("currencyconversionhistory") 
 
+
+#     #pick the first bookingdate for all currecies
+#     profile_df1= profile_df.filter("BookingCurrency != 'PHP'")
+#     profile_df2= profile_df.filter("BookingCurrency == 'PHP'")
+#     profile_df1.createOrReplaceTempView("profiledf1") 
+#     fill_missing_dates = """
+#         WITH cte AS (
+#             SELECT 
+#                 bookingcurrency,
+#                 bookingdate,
+#                 ROW_NUMBER() OVER(PARTITION BY bookingcurrency ORDER BY bookingdate) AS rn
+#             FROM profiledf1
+#         ),
+#         firstbdate AS (
+#             SELECT * 
+#             FROM cte 
+#             WHERE rn = 1
+#         ),
+#         dates AS (
+#             SELECT 
+#                 f.bookingdate,
+#                 f.bookingcurrency,
+#                 max(c.versionstartutc) AS max_versionstartutc
+#             FROM firstbdate f
+#             LEFT JOIN currencyconversionhistory c
+#                 ON CAST(CAST(f.bookingdate AS TIMESTAMP) + INTERVAL 8 HOURS AS DATE) >= CAST(c.versionstartutc AS DATE) 
+#                 AND f.bookingcurrency = c.fromcurrencycode
+#             GROUP BY
+#                 f.bookingdate,
+#                 f.bookingcurrency
+#         ),
+#         profiles_dates AS (
+#             SELECT u.*,
+#                    d.max_versionstartutc
+#             FROM profiledf1 u
+#             LEFT JOIN dates d 
+#             ON u.bookingdate = d.bookingdate 
+#             AND d.bookingcurrency = u.bookingcurrency
+#         ),
+#         profiles2 AS (
+#             SELECT *,
+#                    CASE 
+#                    WHEN max_versionstartutc IS NOT NULL THEN max_versionstartutc ELSE CAST(bookingdate AS TIMESTAMP) + INTERVAL 8 HOURS
+#                    END AS versionstartutc_filled
+#             FROM profiles_dates
+#         ),
+#         profiles3 AS (
+#             SELECT p2.*,
+#                    c.conversionrate
+#             FROM profiles2 p2
+#             LEFT JOIN (
+#                 SELECT DISTINCT versionstartutc, conversionrate, fromcurrencycode 
+#                 FROM currencyconversionhistory
+#             ) c
+#             ON CAST(p2.versionstartutc_filled AS DATE) = CAST(c.versionstartutc AS DATE) 
+#             AND p2.bookingcurrency = c.fromcurrencycode
+#         )
+#         SELECT * FROM profiles3
+#     """
+
+#     profile_df1 - spark.sql(fill_missing_dates)
+
+#     # query = """
+#     #         SELECT 
+#     #             p.*, 
+#     #             ch.conversionrate AS currency_conversion_rate
+#     #         FROM 
+#     #             profiles p 
+#     #         LEFT JOIN 
+#     #             currencyconversionhistory ch 
+#     #         ON 
+#     #             p.BookingCurrency = ch.fromcurrencycode 
+#     #             AND CAST(CAST(p.bookingdate AS TIMESTAMP) + INTERVAL 8 HOURS AS DATE) = CAST(ch.versionstartutc AS DATE) 
+#     #             AND ch.tocurrencycode = 'PHP'
+#     #         """
+    
+#     # profile_df = spark.sql(query)
+#     profile_df1.createOrReplaceTempView("profiledf1")
+
+#     fill_missing_rates = """
+#     SELECT *,
+#         LAST_VALUE(conversionrate, TRUE) OVER (PARTITION BY bookingcurrency ORDER BY bookingdate) AS conversionrate_filled 
+#     FROM profiledf1
+#     """
+
+#     profile_df1 = spark.sql(fill_missing_rates)
+#     profile_df1 = profile_df1.withColumn(
+#         "conversionrate_final",
+#         when(col("conversionrate").isNotNull(), col("conversionrate")).otherwise(col("conversionrate_filled"))
+#     )
+#     # profile_df1 = profile_df.withColumn("Revenue",when(col("BookingCurrency") != "PHP", spark_round(col("Revenue") * col("conversionrate"), 2)).otherwise(spark_round(col("Revenue"), 2)))
+#     profile_df1 = profile_df1.withColumn(
+#     "Revenue",
+#     when(col("BookingCurrency") != "PHP", spark_round(col("Revenue") * col("conversionrate_final"), 2)).otherwise(spark_round(col("Revenue"), 2)))
+   
+#     # Ensure profile_df2 has the same columns as profile_df1
+#     for column in profile_df1.columns:
+#         if column not in profile_df2.columns:
+#             profile_df2 = profile_df2.withColumn(column, lit(None).cast(profile_df1.schema[column].dataType))
+
+#     # Combine the dataframes
+#     profile_df = profile_df1.unionByName(profile_df2)
+#     return profile_df
+
+def cal_revenue(profile_df, source_dict_copy, spark,LOGGER):
+
+    profile_df.createOrReplaceTempView("profiles")
+    source_dict_copy["all_currencyconversionhistory"].createOrReplaceTempView("currencyconversionhistory")
+
+    # Separate the data based on BookingCurrency
+    profile_df1 = profile_df.filter("BookingCurrency != 'PHP'")
+    profile_df2 = profile_df.filter("BookingCurrency == 'PHP'")
+    profile_df1.createOrReplaceTempView("profiledf1")
+    LOGGER.info("ccai - data partitioned based on BookingCurrency done")
+
+    # SQL query to fill missing dates and get conversion rates
+    fill_missing_dates = """
+        WITH cte AS (
+            SELECT 
+                bookingcurrency,
+                bookingdate,
+                ROW_NUMBER() OVER(PARTITION BY bookingcurrency ORDER BY bookingdate) AS rn
+            FROM profiledf1
+        ),
+        firstbdate AS (
+            SELECT * 
+            FROM cte 
+            WHERE rn = 1
+        ),
+        dates AS (
+            SELECT 
+                f.bookingdate,
+                f.bookingcurrency,
+                max(c.versionstartutc) AS max_versionstartutc
+            FROM firstbdate f
+            LEFT JOIN currencyconversionhistory c
+                ON CAST(CAST(f.bookingdate AS TIMESTAMP) + INTERVAL 8 HOURS AS DATE) >= CAST(c.versionstartutc AS DATE) 
+                AND f.bookingcurrency = c.fromcurrencycode
+            GROUP BY
+                f.bookingdate,
+                f.bookingcurrency
+        ),
+        profiles_dates AS (
+            SELECT u.*,
+                   d.max_versionstartutc
+            FROM profiledf1 u
+            LEFT JOIN dates d 
+            ON u.bookingdate = d.bookingdate 
+            AND d.bookingcurrency = u.bookingcurrency
+        ),
+        profiles2 AS (
+            SELECT *,
+                   CASE 
+                   WHEN max_versionstartutc IS NOT NULL THEN max_versionstartutc ELSE CAST(bookingdate AS TIMESTAMP) + INTERVAL 8 HOURS
+                   END AS versionstartutc_filled
+            FROM profiles_dates
+        ),
+        profiles3 AS (
+            SELECT p2.*,
+                   c.conversionrate
+            FROM profiles2 p2
+            LEFT JOIN (
+                SELECT DISTINCT versionstartutc, conversionrate, fromcurrencycode 
+                FROM currencyconversionhistory
+            ) c
+            ON CAST(p2.versionstartutc_filled AS DATE) = CAST(c.versionstartutc AS DATE) 
+            AND p2.bookingcurrency = c.fromcurrencycode
+        )
+        SELECT * FROM profiles3
+    """
+
+    profile_df1 = spark.sql(fill_missing_dates)
+    LOGGER.info("ccai - fill missing dates and get conversion rates done")
+
+    profile_df1.createOrReplaceTempView("profiledf1")
+
+    fill_missing_rates = """
+        SELECT *,
+               LAST_VALUE(conversionrate, TRUE) OVER (PARTITION BY bookingcurrency ORDER BY bookingdate) AS conversionrate_filled 
+        FROM profiledf1
+    """
+    profile_df1 = spark.sql(fill_missing_rates)
+    LOGGER.info("ccai - fill missing rates done")
+    profile_df1 = profile_df1.withColumn(
+        "conversionrate_final",
+        when(col("conversionrate").isNotNull(), col("conversionrate")).otherwise(col("conversionrate_filled"))
+    )
+    profile_df1 = profile_df1.withColumn(
+        "Revenue",
+        when(col("BookingCurrency") != "PHP", spark_round(col("Revenue") * col("conversionrate_final"), 2)).otherwise(spark_round(col("Revenue"), 2))
+    )
+
+    # Ensure profile_df2 has the same columns as profile_df1
+    for column in profile_df1.columns:
+        if column not in profile_df2.columns:
+            profile_df2 = profile_df2.withColumn(column, lit(None).cast(profile_df1.schema[column].dataType))
+
+    # Combine the dataframes
+    profile_df = profile_df1.unionByName(profile_df2)
     return profile_df
+
 
 def compute_profile(config_path, spark,LOGGER,start_date,end_date,incremental):
     spark_conf(spark)
@@ -1314,7 +1476,7 @@ def compute_profile(config_path, spark,LOGGER,start_date,end_date,incremental):
     LOGGER.info(f"bookings ignored")
     LOGGER.info("ccai - profile row count: " + str(profile_df.count()))
 
-    profile_df = cal_revenue(profile_df,source_dict_copy,spark)
+    profile_df = cal_revenue(profile_df,source_dict_copy,spark,LOGGER)
     LOGGER.info("ccai - totalrevenue PHP calculated successfully")
 
 
