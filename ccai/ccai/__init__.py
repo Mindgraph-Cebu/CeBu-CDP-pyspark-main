@@ -17,21 +17,14 @@ import networkx as nx
 class customer360ai:
     def __init__(self) -> None:
         self.version = "0.0.1"
-        self.author = "Anil Turaga"
-        self.email = "anil.turaga@mind-graph.com"
+        self.author = ["Anil Turaga","Pradish Pranam"]
+        self.email = ["anil.turaga@mind-graph.com","pradishpranam.s@mind-graph.com"]
         status, msg = check_license()
 
         if not status:
             print(msg)
             sys.exit(-1)
 
-    # def compute_profile(self, config_path, spark, partition_date, logger):
-    #     return compute_profile(
-    #         config_path=config_path,
-    #         spark=spark,
-    #         partition_date=partition_date,
-    #         LOGGER=logger,
-    #     )
     def compute_profile(self,config_path, spark,LOGGER,start_date,end_date,incremental):
         return compute_profile(
             config_path=config_path,
