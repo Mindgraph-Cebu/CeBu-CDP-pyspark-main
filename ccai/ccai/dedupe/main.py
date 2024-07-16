@@ -20,7 +20,7 @@ from pyspark import SparkContext, SparkConf
 import ibis
 import random
 import string
-from pyspark.sql.functions import udf
+from pyspark.sql.functions import udf,col
 from datetime import datetime as dt
 
 def get_config(file_path):
@@ -62,13 +62,15 @@ def get_date_similarity(d1, d2):
         return False
     if (d1.strip()==d2.strip()):
         return True
-    try:
-        y1,m1,day1 = d1.strip().split("-")
-        y2,m2,day2 = d2.strip().split("-")
-        score=getCompScore(y1,y2)+getCompScore(m1,m2)+getCompScore(d1,d2)
-        return score>=2.5
-    except:
+    else:
         return False
+    # try:
+    #     y1,m1,day1 = d1.strip().split("-")
+    #     y2,m2,day2 = d2.strip().split("-")
+    #     score=getCompScore(y1,y2)+getCompScore(m1,m2)+getCompScore(d1,d2)
+    #     return score>= 3
+    # except:
+    #     return False
 
 class DriverLogs:
     def __init__(self, log_text = "Dedupe Starts!"):
@@ -136,12 +138,12 @@ def compute_dedupe(config_path, spark, end_date, LOGGER, loaded_dob_graph):
     # ! make FNU in FirstName column as null
     # df = df.withColumn("FirstName", F.when(F.col("FirstName") == "FNU", None).otherwise(F.col("FirstName")))
     # make DateOfBirth as null if first four elements is less than 1947
-    df = df.withColumn(
-        "DateOfBirth",
-        F.when(F.col("DateOfBirth").substr(0, 4) < "1947", CCAI_NULL).otherwise(
-            F.col("DateOfBirth")
-        ),
-    )
+    # df = df.withColumn(
+    #     "DateOfBirth",
+    #     F.when(F.col("DateOfBirth").substr(0, 4) < "1947", CCAI_NULL).otherwise(
+    #         F.col("DateOfBirth")
+    #     ),
+    # )
     # df = df.withColumn(
     #     "DateOfBirth",
     #     F.when(F.col("DateOfBirth").substr(0, 4) > "3000", CCAI_NULL).otherwise(
@@ -487,6 +489,7 @@ def compute_dedupe(config_path, spark, end_date, LOGGER, loaded_dob_graph):
     LOGGER.info("ccai - ignored profiles rows : " + str (spark.read.parquet(config["storageDetails"][4]["pathUrl"]).count()))
     LOGGER.info("ccai - df -> "+str(disp_str))
 
+    LOGGER.info("ccai - count before cross join : " + str (df.count()))
     crossjoin = """
     select t1.*,
     t2.firstname as firstname_right, 
@@ -496,12 +499,16 @@ def compute_dedupe(config_path, spark, end_date, LOGGER, loaded_dob_graph):
     t2.provisionalprimarykey as provisionalprimarykey_right,
     t2.passengerid_list as passengerid_list_right, 
     t2.group_hash as group_hash_right 
-    from df_dedupe as t1 left join df_dedupe as t2 on t1.passengerid != t2.passengerid and t1.pfirstname == t2.pfirstname and t1.plastname == t2.plastname
+    from df_dedupe as t1 left join df_dedupe as t2 on t1.passengerid != t2.passengerid and t1.dateofbirth = t2.dateofbirth and t1.pfirstname = t2.pfirstname and t1.plastname = t2.plastname 
     """
     df.createOrReplaceTempView("df_dedupe")
+
     df = (spark.sql(crossjoin)
           .withColumn("dateSim", get_date_similarity(F.col("dateofbirth"), F.col("dateofbirth_right")))
           .filter("dateSim").drop("dateSim"))
+    check_df = df.filter(col("dateofbirth") != col("dateofbirth_right")).count()
+    LOGGER.info("ccai - not equal dobs = {}".format(check_df))
+
     df.cache()
     df_count=df.count()
     driver_log.log("Num Rows After Cross Join = {}".format(df_count))
