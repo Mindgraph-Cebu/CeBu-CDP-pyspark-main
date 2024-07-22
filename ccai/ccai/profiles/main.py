@@ -231,6 +231,10 @@ def load_data_day0(config,spark,LOGGER,partition_date,archive_date):
                 LOGGER.info("ccai -> Partition Date - {} : {} ".format(each_source['entityName'],latest_partition ))
                 source_dict[each_source['entityName']] = spark.read.load(
                     each_source['pathUrl'] + "/"  +latest_partition, format=each_source['dataFormat']).where("ToCurrencyCode == 'PHP'").select(column_list[each_source['entityName']])
+            
+            elif each_source['entityName'] == "all_booking":
+                source_dict[each_source['entityName']] = spark.read.load(
+                    each_source['pathUrl'] + "/" + "ods=" +partition_date, format=each_source['dataFormat']).filter('Status != 4').select(column_list[each_source['entityName']])
                 
             else:
                 LOGGER.info(f"ccai -> Partition Date - {each_source['entityName']} : {str(partition_date)}")
@@ -296,7 +300,7 @@ def load_data_incremental(config,spark,LOGGER,start_date,end_date):
 
 def derived_tables(config, source_dict, spark, LOGGER):
     derive_dict = {
-        "all_passengerjourneyleg": ["select distinct PassengerID,UnitDesignator,SegmentID,LegNumber from all_passengerjourneyleg order by PassengerID, SegmentID,LegNumber", "SELECT PassengerID, CONCAT_WS('_',COLLECT_LIST(UnitDesignator)) AS UnitDesignator FROM all_passengerjourneyleg GROUP BY PassengerID"],
+        "all_passengerjourneyleg": ["select distinct PassengerID,UnitDesignator,SegmentID,LegNumber from all_passengerjourneyleg order by PassengerID, SegmentID,LegNumber", "SELECT PassengerID, CONCAT_WS('_',COLLECT_LIST(UnitDesignator)), MAX(LiftStatus) as LiftStatus AS UnitDesignator FROM all_passengerjourneyleg GROUP BY PassengerID"],
         "GetTravelDestination_all_passengerjourneysegment": ["SELECT distinct PassengerID,JourneyNumber,ArrivalStation,SegmentNumber from all_passengerjourneysegment order by PassengerID, JourneyNumber,SegmentNumber", "select PassengerID, CONCAT_WS('_',COLLECT_LIST(ArrivalStation)) as ArrivalStation FROM GetTravelDestination_all_passengerjourneysegment GROUP BY PassengerID"],
         # "GetTravelDestination_all_passengerjourneysegment": ["SELECT all_passengerjourneysegment.PassengerID AS PassengerID, all_passengerjourneysegment.ArrivalStation AS ArrivalStation FROM ( SELECT PassengerID, max(JourneyNumber) AS maxJourneyNumber FROM all_passengerjourneysegment GROUP BY PassengerID ) AS all_passengerjourneysegment_max JOIN all_passengerjourneysegment ON all_passengerjourneysegment_max.PassengerID = all_passengerjourneysegment.PassengerID AND all_passengerjourneysegment_max.maxJourneyNumber = all_passengerjourneysegment.JourneyNumber"]
         "GetPassportNumber_all_passengertraveldoc": ["SELECT all_passengertraveldoc.PassengerID AS PassengerID, all_passengertraveldoc.DocNumber AS DocNumber, all_passengertraveldoc.IssuedByCode AS IssuedByCode, all_passengertraveldoc.ExpirationDate AS ExpirationDate FROM all_passengertraveldoc WHERE upper(all_passengertraveldoc.DocTypeCode) = 'P' AND (all_passengertraveldoc.PassengerID, all_passengertraveldoc.ExpirationDate) IN ( SELECT all_passengertraveldoc.PassengerID AS PassengerID, max(all_passengertraveldoc.ExpirationDate) AS maxExpirationDate FROM all_passengertraveldoc where upper(all_passengertraveldoc.DocTypeCode) = 'P' GROUP BY all_passengertraveldoc.PassengerID )"],
@@ -304,8 +308,7 @@ def derived_tables(config, source_dict, spark, LOGGER):
         "all_fee": ["select all_passengerfee.PassengerID,all_passengerfee.FeeCode, all_fee.Name from all_passengerfee left join all_fee on all_passengerfee.FeeCode = all_fee.FeeCode"],
         "all_passengerjourneysegment": ["select * from all_passengerjourneysegment where JourneyNumber = 1 and SegmentNumber = 1"],
         "GetTravelSoloOrGroup_all_bookingpassenger": ["select BookingID, case when count(distinct PassengerID) > 1 then 'Group' else 'Solo' end as TravelSoloOrGroup from all_bookingpassenger group by BookingID"]
-        
-    }
+        }
     mask_sources = ["all_passengerfee"]
     # create temp tables for all sources
     for each_source in source_dict:
@@ -355,6 +358,7 @@ def transaction_conversion(config, source_dict, spark,LOGGER):
         source_dict[each_source].createOrReplaceTempView(each_source)
         query = "select " + transaction_dict[each_source]['key']
         for each_column in column_list[each_source]:
+            
             if each_column != transaction_dict[each_source]['key'] and each_column != transaction_dict[each_source]['mapColumn']:
                 query += ", struct(" + transaction_dict[each_source]['mapColumn'] + \
                     ", " + each_column + ") as " + each_column
@@ -521,12 +525,10 @@ def join_entities(config, source_dict, spark, LOGGER):
     joined_df.createOrReplaceTempView("joined_df")
     # LOGGER.info("ccai -> join entities - check10 : {}".format( joined_df.count()))
     # LOGGER.info("ccai -> bookingid count - check10 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
-    # join all_bookingcontact on BookingID
+    
     joined_df = spark.sql(
         "select * from joined_df left join all_bookingcontact on joined_df.all_booking_BookingID <=> all_bookingcontact.all_bookingcontact_BookingID")
     joined_df.createOrReplaceTempView("joined_df")
-    # LOGGER.info("ccai -> join entities - check11 : {}".format( joined_df.count()))
-    # LOGGER.info("ccai -> bookingid count - check11 : {}".format(joined_df.select('all_bookingpassenger_BookingID').distinct().count()))
 
     # join GetTravelSoloOrGroup_all_bookingpassenger on BookingID
     joined_df = spark.sql("select * from joined_df left join GetTravelSoloOrGroup_all_bookingpassenger on joined_df.all_booking_BookingID <=> GetTravelSoloOrGroup_all_bookingpassenger.GetTravelSoloOrGroup_all_bookingpassenger_BookingID")
@@ -831,16 +833,59 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
             #         end
             #     end as """+each_transformation['attributeName']+""" from profiles
             #     """)
-            query = """
-                case when """+each_transformation['sourceColumns'][0]['entityName']+"""_"""+each_transformation['sourceColumns'][0]['columnName']+""" is null and """+each_transformation['sourceColumns'][1]['entityName']+"""_"""+each_transformation['sourceColumns'][1]['columnName']+""" is null then
-                    case when """+each_transformation['sourceColumns'][2]['entityName']+"""_"""+each_transformation['sourceColumns'][2]['columnName']+""" is null and """+each_transformation['sourceColumns'][3]['entityName']+"""_"""+each_transformation['sourceColumns'][3]['columnName']+""" is null then 'No'
-                    else 'Yes'
-                    end
-                else
-                    case when """+each_transformation['sourceColumns'][0]['entityName']+"""_"""+each_transformation['sourceColumns'][0]['columnName']+""" = """+each_transformation['sourceColumns'][2]['entityName']+"""_"""+each_transformation['sourceColumns'][2]['columnName']+""" and """+each_transformation['sourceColumns'][1]['entityName']+"""_"""+each_transformation['sourceColumns'][1]['columnName']+""" = """+each_transformation['sourceColumns'][3]['entityName']+"""_"""+each_transformation['sourceColumns'][3]['columnName']+""" then 'Yes'
-                    else 'No'
-                    end
-                end as """+each_transformation['attributeName']
+            # query = """
+            #     case when """+each_transformation['sourceColumns'][0]['entityName']+"""_"""+each_transformation['sourceColumns'][0]['columnName']+""" is null and """+each_transformation['sourceColumns'][1]['entityName']+"""_"""+each_transformation['sourceColumns'][1]['columnName']+""" is null then
+            #         case when """+each_transformation['sourceColumns'][2]['entityName']+"""_"""+each_transformation['sourceColumns'][2]['columnName']+""" is null and """+each_transformation['sourceColumns'][3]['entityName']+"""_"""+each_transformation['sourceColumns'][3]['columnName']+""" is null then 'No'
+            #         else 'Yes'
+            #         end
+            #     else
+            #         case when """+each_transformation['sourceColumns'][0]['entityName']+"""_"""+each_transformation['sourceColumns'][0]['columnName']+""" = """+each_transformation['sourceColumns'][2]['entityName']+"""_"""+each_transformation['sourceColumns'][2]['columnName']+""" and """+each_transformation['sourceColumns'][1]['entityName']+"""_"""+each_transformation['sourceColumns'][1]['columnName']+""" = """+each_transformation['sourceColumns'][3]['entityName']+"""_"""+each_transformation['sourceColumns'][3]['columnName']+""" then 'Yes'
+            #         else 'No'
+            #         end
+            #     end as """+each_transformation['attributeName']
+            query = f"""
+                    CASE
+                        WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) != 'anonymous' THEN 
+                            CASE 
+                                WHEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']} IS NULL 
+                                    AND {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']} IS NULL THEN
+                                    CASE 
+                                        WHEN {each_transformation['sourceColumns'][3]['entityName']}_{each_transformation['sourceColumns'][3]['columnName']} IS NULL 
+                                            AND {each_transformation['sourceColumns'][4]['entityName']}_{each_transformation['sourceColumns'][4]['columnName']} IS NULL THEN 
+                                            'No'
+                                        ELSE 
+                                            'Yes'
+                                    END
+                                ELSE
+                                    CASE 
+                                        WHEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']} = {each_transformation['sourceColumns'][3]['entityName']}_{each_transformation['sourceColumns'][3]['columnName']} 
+                                            AND {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']} = {each_transformation['sourceColumns'][4]['entityName']}_{each_transformation['sourceColumns'][4]['columnName']} THEN 
+                                            'Yes'
+                                        ELSE 
+                                            'No'
+                                    END
+                            END
+                        ELSE
+                            CASE 
+                                WHEN {each_transformation['sourceColumns'][5]['entityName']}_{each_transformation['sourceColumns'][5]['columnName']}['P'] IS NULL 
+                                    AND {each_transformation['sourceColumns'][6]['entityName']}_{each_transformation['sourceColumns'][6]['columnName']}['P'] IS NULL THEN
+                                    CASE 
+                                        WHEN {each_transformation['sourceColumns'][7]['entityName']}_{each_transformation['sourceColumns'][7]['columnName']} IS NULL 
+                                            AND {each_transformation['sourceColumns'][8]['entityName']}_{each_transformation['sourceColumns'][8]['columnName']} IS NULL THEN 
+                                            'No'
+                                        ELSE 
+                                            'Yes'
+                                    END
+                                ELSE
+                                    CASE 
+                                        WHEN {each_transformation['sourceColumns'][5]['entityName']}_{each_transformation['sourceColumns'][5]['columnName']}['P'] = {each_transformation['sourceColumns'][7]['entityName']}_{each_transformation['sourceColumns'][7]['columnName']} 
+                                            AND {each_transformation['sourceColumns'][6]['entityName']}_{each_transformation['sourceColumns'][6]['columnName']}['P'] = {each_transformation['sourceColumns'][8]['entityName']}_{each_transformation['sourceColumns'][8]['columnName']} THEN 
+                                            'Yes'
+                                        ELSE 
+                                            'No'
+                                    END
+                            END
+                    END AS {each_transformation['attributeName']}"""
             new_column_queries.append(query)
             ### Here <<<<<<<<<<<<<<<<<<<<<<<<--------------->>>>>>>>>>>>>>>>>> Checkpoint
             profile_df = spark.sql("""select *, {} from profiles""".format(", ".join(new_column_queries)))
@@ -993,9 +1038,17 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
             else 'No' end end else 'No' end as """ + each_transformation['attributeName']
             new_column_queries.append(query)
             # LOGGER.info("GetIsEmployeeDependent completed")
+            
+        
         elif each_transformation['transformationFunction'] == 'GetBookerDetails':
             # profile_df = spark.sql("select *, " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " as " + each_transformation['attributeName'] + " from profiles")
             query = each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " as " + each_transformation['attributeName']
+            new_column_queries.append(query)
+        elif each_transformation['transformationFunction'] == 'GetBookerInformation':
+            # profile_df = spark.sql("select *, " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " as " + each_transformation['attributeName'] + " from profiles")
+            # query = each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " as " + each_transformation['attributeName']
+            query = f"case when lower({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) = 'anonymous' then {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']}['P'] else {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']} end as {each_transformation['attributeName']}"
+
             new_column_queries.append(query)
         elif each_transformation['transformationFunction'] == 'GetBookerPassportNumber':
             ## Here <<<<<<<<<<---------->>>>>>>>>>>> checkpoint
@@ -1018,17 +1071,47 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
         elif each_transformation['transformationFunction'] == 'GetBookerMobile':
             # get col['M']
             # profile_df = spark.sql("select *, " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + "['M'] as " + each_transformation['attributeName'] + " from profiles")
-            query = each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + "['M'] as " + each_transformation['attributeName']
+            # query = each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + "['M'] as " + each_transformation['attributeName']
+            query = f"""
+                    CASE 
+                        WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) = 'anonymous' 
+                        THEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']}['P'] 
+                        ELSE {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']}['M'] 
+                    END AS {each_transformation['attributeName']}
+                    """
             new_column_queries.append(query)
         elif each_transformation['transformationFunction'] == 'GetBookerHomePhone':
             # get col['H']
             # profile_df = spark.sql("select *, " + each_transformation['sourceColumns'][0]['entityName'] + "_" +  each_transformation['sourceColumns'][0]['columnName'] + "['H'] as " + each_transformation['attributeName'] + " from profiles")
-            query = each_transformation['sourceColumns'][0]['entityName'] + "_" +  each_transformation['sourceColumns'][0]['columnName'] + "['H'] as " + each_transformation['attributeName']
+            # query = each_transformation['sourceColumns'][0]['entityName'] + "_" +  each_transformation['sourceColumns'][0]['columnName'] + "['H'] as " + each_transformation['attributeName']
+            query = f"""
+                    CASE 
+                        WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) = 'anonymous' 
+                        THEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']}['P']
+                        ELSE {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']}['H'] 
+                    END AS {each_transformation['attributeName']}
+                    """
+
             new_column_queries.append(query)
         elif each_transformation['transformationFunction'] == 'GetBookerStreetAddress':
             # concat_ws col1, col2, col3
             # profile_df = spark.sql("select *, concat_ws(', ', " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + ", " + each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + ", " + each_transformation['sourceColumns'][2]['entityName'] + "_" + each_transformation['sourceColumns'][2]['columnName'] + ") as " + each_transformation['attributeName'] + " from profiles")
-            query = "concat_ws(', ', " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + ", " + each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + ", " + each_transformation['sourceColumns'][2]['entityName'] + "_" + each_transformation['sourceColumns'][2]['columnName'] + ") as " + each_transformation['attributeName']
+            # query = "concat_ws(', ', " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + ", " + each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + ", " + each_transformation['sourceColumns'][2]['entityName'] + "_" + each_transformation['sourceColumns'][2]['columnName'] + ") as " + each_transformation['attributeName']
+            query = f"""
+                    CASE 
+                        WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) = 'anonymous' 
+                        THEN CONCAT_WS(', ',
+                            {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}['P'],
+                            {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']}['P'],
+                            {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']}['P']
+                        ) 
+                        ELSE CONCAT_WS(', ',
+                            {each_transformation['sourceColumns'][4]['entityName']}_{each_transformation['sourceColumns'][4]['columnName']},
+                            {each_transformation['sourceColumns'][5]['entityName']}_{each_transformation['sourceColumns'][5]['columnName']},
+                            {each_transformation['sourceColumns'][6]['entityName']}_{each_transformation['sourceColumns'][6]['columnName']}
+                        ) 
+                    END AS {each_transformation['attributeName']}
+                    """
             new_column_queries.append(query)
         elif each_transformation['transformationFunction'] == 'GetBookerGetGoID':
             # get col['GG']
@@ -1064,8 +1147,18 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
             # profile_df = spark.sql("select *, "+ each_transformation['sourceColumns'][0]['entityName']+"_" + each_transformation['sourceColumns'][0]['columnName']+" as "+each_transformation['attributeName']+" from profiles")
             query = each_transformation['sourceColumns'][0]['entityName']+"_" + each_transformation['sourceColumns'][0]['columnName']+" as "+each_transformation['attributeName']
             new_column_queries.append(query)
-        # print(each_transformation)
-
+        elif each_transformation["transformationFunction"] == "GetBoardStatus":
+            # profile_df = spark.sql("select *, "+ each_transformation['sourceColumns'][0]['entityName']+"_" + each_transformation['sourceColumns'][0]['columnName']+" as "+each_transformation['attributeName']+" from profiles")
+            query = f"""
+                        CASE 
+                            WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} = 0 THEN 'Default'
+                            WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} = 1 THEN 'CheckedIn'
+                            WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} = 2 THEN 'Boarded'
+                            WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} = 3 THEN 'NoShow'
+                            ELSE 'Default'
+                        END AS {each_transformation['attributeName']}
+                        """
+            new_column_queries.append(query)
 
     profile_df = spark.sql("""select *, {} from profiles""".format(", ".join(new_column_queries)))
     profile_df.cache()
@@ -1153,14 +1246,14 @@ def ignore_bookings(source_dict_copy, profile_df, LOGGER):
 
     LOGGER.info("ccai - CSP transactions ignored: {}".format(ignored_count))
     
-    if ("Status" in profile_df.columns):
-        profile_df=profile_df.select("*").where(profile_df.Status!=4)
-        LOGGER.info("ccai - Status!=4 filtered in profiles")
-        final_row_count_after_status_filter = profile_df.count()
-        status_ignored_count = final_row_count_before_status_filter - final_row_count_after_status_filter
-        LOGGER.info("ccai - Status!=4 ignored: {}".format(status_ignored_count))
-    else:
-        LOGGER.info("Status not found in profiles")
+    # if ("Status" in profile_df.columns):
+    #     profile_df=profile_df.select("*").where(profile_df.Status!=4)
+    #     LOGGER.info("ccai - Status!=4 filtered in profiles")
+    #     final_row_count_after_status_filter = profile_df.count()
+    #     status_ignored_count = final_row_count_before_status_filter - final_row_count_after_status_filter
+    #     LOGGER.info("ccai - Status!=4 ignored: {}".format(status_ignored_count))
+    # else:
+    #     LOGGER.info("Status not found in profiles")
 
 
     return profile_df
