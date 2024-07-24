@@ -395,29 +395,8 @@
                 "numberOfPartitions": 1
             },
             "joinColumn": "VoucherReference"
-        },
-        {
-            "entityName": "all_currencyconversionhistory",
-            "entityType": "snapshot",
-            "sourceType": "filesystem",
-            "dataFormat": "orc",
-            "fileSystem": "s3",
-            "isFact": "false",
-            "isMandatory": "false",
-            "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/flatfiles/hdata/flatfiles_all_diffen_open/flatfiles_all_currencyconversionhistory",
-            "partitionDetails": {
-                "partitionColumn": [
-                    "ods"
-                ],
-                "partitionType": "daily",
-                "partitionFormat": [
-                    "yyyy-MM-dd"
-                ],
-                "numberOfPartitions": 1
-            },
-            "joinColumn": "VersionStartUTC"
         }
+        
         
         
 
@@ -3331,32 +3310,6 @@
                 
             ],
             "transformationFunction": "GetIsCsp"
-        },
-        {
-            "attributeName": "TotalRevenue",
-            "sourceColumns": [
-                {
-                    "entityName": "all_currencyconversionhistory",
-                    "columnName": "FromCurrencyCode"
-                },
-                {
-                    "entityName": "all_currencyconversionhistory",
-                    "columnName": "VersionStartUTC"
-                },
-                {
-                    "entityName": "all_currencyconversionhistory",
-                    "columnName": "VersionEndUTC"
-                },
-                {
-                    "entityName": "all_currencyconversionhistory",
-                    "columnName": "ConversionRate"
-                },
-                {
-                    "entityName": "all_currencyconversionhistory",
-                    "columnName": "ToCurrencyCode"
-                }
-            ],
-            "transformationFunction": "GetTotalRevenue"
         }
         
     ],
@@ -3401,6 +3354,13 @@
             "dataFormat": "parquet",
             "fileSystem": "s3",
             "pathUrl": "s3a://cebu-cdp-data-dev/new_passengers/",
+            "storageHandler": "PersistHadoopFS"
+        },
+        {
+            "recordType": "change-data-capture",
+            "dataFormat": "parquet",
+            "fileSystem": "s3",
+            "pathUrl": "s3a://cebu-cdp-data-dev/change-data-capture/",
             "storageHandler": "PersistHadoopFS"
         }
     ],
