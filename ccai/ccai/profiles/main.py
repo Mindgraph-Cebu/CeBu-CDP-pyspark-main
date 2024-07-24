@@ -300,7 +300,7 @@ def load_data_incremental(config,spark,LOGGER,start_date,end_date):
 
 def derived_tables(config, source_dict, spark, LOGGER):
     derive_dict = {
-        "all_passengerjourneyleg": ["select distinct PassengerID,UnitDesignator,SegmentID,LegNumber from all_passengerjourneyleg order by PassengerID, SegmentID,LegNumber", "SELECT PassengerID, CONCAT_WS('_',COLLECT_LIST(UnitDesignator)), MAX(LiftStatus) as LiftStatus AS UnitDesignator FROM all_passengerjourneyleg GROUP BY PassengerID"],
+        "all_passengerjourneyleg": ["select distinct PassengerID,UnitDesignator,LiftStatus,SegmentID,LegNumber from all_passengerjourneyleg order by PassengerID, SegmentID,LegNumber", "SELECT PassengerID, CONCAT_WS('_',COLLECT_LIST(UnitDesignator)) AS UnitDesignator, MAX(LiftStatus) as LiftStatus FROM all_passengerjourneyleg GROUP BY PassengerID"],
         "GetTravelDestination_all_passengerjourneysegment": ["SELECT distinct PassengerID,JourneyNumber,ArrivalStation,SegmentNumber from all_passengerjourneysegment order by PassengerID, JourneyNumber,SegmentNumber", "select PassengerID, CONCAT_WS('_',COLLECT_LIST(ArrivalStation)) as ArrivalStation FROM GetTravelDestination_all_passengerjourneysegment GROUP BY PassengerID"],
         # "GetTravelDestination_all_passengerjourneysegment": ["SELECT all_passengerjourneysegment.PassengerID AS PassengerID, all_passengerjourneysegment.ArrivalStation AS ArrivalStation FROM ( SELECT PassengerID, max(JourneyNumber) AS maxJourneyNumber FROM all_passengerjourneysegment GROUP BY PassengerID ) AS all_passengerjourneysegment_max JOIN all_passengerjourneysegment ON all_passengerjourneysegment_max.PassengerID = all_passengerjourneysegment.PassengerID AND all_passengerjourneysegment_max.maxJourneyNumber = all_passengerjourneysegment.JourneyNumber"]
         "GetPassportNumber_all_passengertraveldoc": ["SELECT all_passengertraveldoc.PassengerID AS PassengerID, all_passengertraveldoc.DocNumber AS DocNumber, all_passengertraveldoc.IssuedByCode AS IssuedByCode, all_passengertraveldoc.ExpirationDate AS ExpirationDate FROM all_passengertraveldoc WHERE upper(all_passengertraveldoc.DocTypeCode) = 'P' AND (all_passengertraveldoc.PassengerID, all_passengertraveldoc.ExpirationDate) IN ( SELECT all_passengertraveldoc.PassengerID AS PassengerID, max(all_passengertraveldoc.ExpirationDate) AS maxExpirationDate FROM all_passengertraveldoc where upper(all_passengertraveldoc.DocTypeCode) = 'P' GROUP BY all_passengertraveldoc.PassengerID )"],
@@ -1101,9 +1101,9 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
                     CASE 
                         WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) = 'anonymous' 
                         THEN CONCAT_WS(', ',
-                            {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}['P'],
                             {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']}['P'],
-                            {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']}['P']
+                            {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']}['P'],
+                            {each_transformation['sourceColumns'][3]['entityName']}_{each_transformation['sourceColumns'][3]['columnName']}['P']
                         ) 
                         ELSE CONCAT_WS(', ',
                             {each_transformation['sourceColumns'][4]['entityName']}_{each_transformation['sourceColumns'][4]['columnName']},
@@ -1156,6 +1156,25 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
                             WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} = 2 THEN 'Boarded'
                             WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} = 3 THEN 'NoShow'
                             ELSE 'Default'
+                        END AS {each_transformation['attributeName']}
+                        """
+            new_column_queries.append(query)
+        elif each_transformation["transformationFunction"] == "GetWithPromo":
+            # profile_df = spark.sql("select *, "+ each_transformation['sourceColumns'][0]['entityName']+"_" + each_transformation['sourceColumns'][0]['columnName']+" as "+each_transformation['attributeName']+" from profiles")
+            query = f"""
+                        CASE 
+                            WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} in ('PA' ,'PD','TG','GP') THEN 1
+                            ELSE 0
+                        END AS {each_transformation['attributeName']}
+                        """
+            new_column_queries.append(query)
+        elif each_transformation["transformationFunction"] == "Gettvouchfim":
+            # profile_df = spark.sql("select *, "+ each_transformation['sourceColumns'][0]['entityName']+"_" + each_transformation['sourceColumns'][0]['columnName']+" as "+each_transformation['attributeName']+" from profiles")
+            query = f"""
+                        CASE 
+                            WHEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']} = 'GOTVOUCH' THEN 'Travel Voucher'
+							WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} = 'FM' THEN 'FIM'
+                            ELSE null
                         END AS {each_transformation['attributeName']}
                         """
             new_column_queries.append(query)
@@ -1259,31 +1278,34 @@ def ignore_bookings(source_dict_copy, profile_df, LOGGER):
     return profile_df
 
 
+
+
+
 def cal_revenue(profile_df, source_dict_copy, spark,LOGGER):
 
     profile_df.createOrReplaceTempView("profiles")
-    source_dict_copy["all_currencyconversionhistory"].createOrReplaceTempView("currencyconversionhistory")
+    # source_dict_copy["all_currencyconversionhistory"].createOrReplaceTempView("currencyconversionhistory")
 
-    window_spec = Window.partitionBy("FromCurrencyCode").orderBy("VersionStartUTC")
-    currency_df = source_dict_copy["all_currencyconversionhistory"].withColumn(
-        "next_start", F.lead("versionstartutc").over(window_spec)
-    ).withColumn(
-        "effective_end", F.coalesce(F.col("next_start"), F.lit("9999-12-31 00:00:00.000"))
-    ).select(
-        "fromcurrencycode", 
-        "effective_end",
-        "VersionStartUTC",
-        "ConversionRate"
-    )
+    # window_spec = Window.partitionBy("FromCurrencyCode").orderBy("VersionStartUTC")
+    # currency_df = source_dict_copy["all_currencyconversionhistory"].withColumn(
+    #     "next_start", F.lead("versionstartutc").over(window_spec)
+    # ).withColumn(
+    #     "effective_end", F.coalesce(F.col("next_start"), F.lit("9999-12-31 00:00:00.000"))
+    # ).select(
+    #     "fromcurrencycode", 
+    #     "effective_end",
+    #     "VersionStartUTC",
+    #     "ConversionRate"
+    # )
 
-    currency_df = F.broadcast(currency_df)
-    currency_df.createOrReplaceTempView("modifiedcurrconv")
+    currency_df = F.broadcast(source_dict_copy["all_currencyconversionhistory"])
+    currency_df.createOrReplaceTempView("currencyconversionhistory")
 
     query = """
-            select p.*,m.VersionStartUTC,m.effective_end,m.ConversionRate from profiles p
-            left join modifiedcurrconv m
+            select p.*,m.VersionStartUTC,m.VersionEndUTC,m.ConversionRate from profiles p
+            left join currencyconversionhistory m
             on CAST(CAST(p.bookingdate AS TIMESTAMP) + INTERVAL 8 HOURS AS DATE) >= CAST(m.VersionStartUTC as DATE)
-            and CAST(CAST(p.bookingdate AS TIMESTAMP) + INTERVAL 8 HOURS AS DATE) < CAST(m.effective_end as DATE)
+            and CAST(CAST(p.bookingdate AS TIMESTAMP) + INTERVAL 8 HOURS AS DATE) < CAST(m.VersionEndUTC as DATE)
             and p.BookingCurrency = m.FromCurrencyCode
             """
     profile_df = spark.sql(query)

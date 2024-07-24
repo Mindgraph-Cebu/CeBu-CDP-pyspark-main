@@ -417,30 +417,7 @@
                 "numberOfPartitions": 1
             },
             "joinColumn": "VersionStartUTC"
-        },
-        {
-            "entityName": "all_organization",
-            "entityType": "snapshot",
-            "sourceType": "filesystem",
-            "dataFormat": "orc",
-            "fileSystem": "s3",
-            "isFact": "false",
-            "isMandatory": "false",
-            "loadLatest": "true",
-            "pathUrl": "s3a://edw-dl-process-data-dev/data/odstest/hdata/odstest_all_diffen_open/odstest_all_organization",
-            "partitionDetails": {
-                "partitionColumn": [
-                    "ods"
-                ],
-                "partitionType": "daily",
-                "partitionFormat": [
-                    "yyyy-MM-dd"
-                ],
-                "numberOfPartitions": 1
-            },
-            "joinColumn": ""
         }
-        
         
 
     ],
@@ -879,8 +856,22 @@
             "columnName": "Status",
             "dataType": "integer",
             "defaultValue": 999
+        },
+        {
+            "columnName": "BoardStatus",
+            "dataType": "string",
+            "defaultValue": "Default"
+        },
+        {
+            "columnName": "tvouchfim",
+            "dataType": "string",
+            "defaultValue": "None"
+        },
+        {
+            "columnName": "WithPromo",
+            "dataType": "integer",
+            "defaultValue": 0
         }
-
 
     ],
     "columnMapping": [
@@ -3516,54 +3507,42 @@
             "transformationFunction": "GetBoardStatus"
         },
         {
-            "attributeName": "BookingMethod",
+            "attributeName": "WithPromo",
             "sourceColumns": [
                 {
-                    "entityName": "all_booking",
-                    "columnName": "OrganizationCode"
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "ClassOfService"
                 },
                 {
-                    "entityName": "all_organization",
-                    "columnName": "OrganizationCode"
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "FareBasis"
                 },
                 {
-                    "entityName": "all_organization",
-                    "columnName": "AgentType"
-                },
-                {
-                    "entityName": "all_booking",
-                    "columnName": "Prefix"
-                }, 
-                {
-                    "entityName": "all_agent",
-                    "columnName": "Prefix"
-                }, 
-                {
-                    "entityName": "all_agent",
-                    "columnName": "AgentType"
-                }, 
-                {
-                    "entityName": "all_booking",
-                    "columnName": "ReceivedBy"
-                },      
-                {
-                    "entityName": "all_booking",
-                    "columnName": "Prefix"
-                }, 
-                {
-                    "entityName": "all_booking",
-                    "columnName": "ChannelType"
-                },
-                {
-                    "entityName": "all_booking",
-                    "columnName": "LocationCode"
-                }, 
-                
-                
-                  
-                
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "DepartureDate"
+                }
+
             ],
-            "transformationFunction": "GetBookingMethod"
+            "transformationFunction": "GetWithPromo"
+        },
+        {
+            "attributeName": "tvouchfim",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "ClassOfService"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "FareBasis"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "DepartureDate"
+                }
+
+            ],
+            "transformationFunction": "Gettvouchfim"
         }
         
     ],
