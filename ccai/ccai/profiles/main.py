@@ -203,13 +203,13 @@ def load_data_day0(config,spark,LOGGER,partition_date,archive_date):
   
             #load only if partitions are available
             if partition_paths:
-                ##should edit
-                non_open_df = spark.read.load(
-                        partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').select(column_list[each_source['entityName']])
-
                 if each_source['entityName'] in non_open_sources:
                     non_open_df = spark.read.load(
                         partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').where("VersionEndUTC == '9999-12-31 00:00:00.000'").select(column_list[each_source['entityName']])
+                non_open_df = spark.read.load(
+                        partition_paths, format=each_source['dataFormat']).where('c_operationtype = "D"').select(column_list[each_source['entityName']])
+
+                
 
                 if each_source['entityName'] == "all_booking":
                     non_open_df = non_open_df.withColumn("Source",F.lit("NonOpen"))
@@ -218,9 +218,7 @@ def load_data_day0(config,spark,LOGGER,partition_date,archive_date):
                 source_dict[each_source['entityName']] = source_dict[each_source['entityName']].unionAll(non_open_df)
                 record_count = non_open_df.count()
                 LOGGER.info("ccai -> Load Data non open  - {} : {} rows".format(resource_name, record_count))
-            if each_source['entityName'] == "all_booking":    
-                columns = source_dict[each_source['entityName']].columns
-                LOGGER.info(f"{each_source['entityName']} columns - {str(columns)}")
+                
             record_count = source_dict[each_source['entityName']].count()
             LOGGER.info("ccai -> Load Data - {} : {} rows".format(each_source['entityName'], record_count))
             LOGGER.info(f"{each_source['entityName']} loaded successfully")
@@ -283,14 +281,14 @@ def load_data_incremental(config,spark,LOGGER,start_date,end_date):
                 partition_paths, format="avro").where(col('c_operationtype') != "A").select(column_list[each_source['entityName']])
             
             #capture updated records
-            cdc_df = spark.read.load(
-                partition_paths, format="avro").where(col('c_operationtype') == "A").select(column_list[each_source['entityName']])
+            # cdc_df = spark.read.load(
+            #     partition_paths, format="avro").where(col('c_operationtype') == "A").select(column_list[each_source['entityName']])
             
-            cdc_df_count = cdc_df.count()
-            if cdc_df_count!=0:
-                s3_output_path = f"{config['storageDetails'][6]['pathUrl']}{each_source['entityName']}/p_date={end_date}/"
-                cdc_df.write.mode("overwrite").parquet(s3_output_path)
-                LOGGER.info("ccai -> Load cdc Data - {} : {} rows".format(each_source['entityName'], cdc_df_count))
+            # cdc_df_count = cdc_df.count()
+            # if cdc_df_count!=0:
+            #     s3_output_path = f"{config['storageDetails'][6]['pathUrl']}{each_source['entityName']}/p_date={end_date}/"
+            #     cdc_df.write.mode("overwrite").parquet(s3_output_path)
+            #     LOGGER.info("ccai -> Load cdc Data - {} : {} rows".format(each_source['entityName'], cdc_df_count))
 
             if each_source['entityName'] == "all_booking":
                 source_dict[each_source['entityName']] = source_dict[each_source['entityName']].withColumn("Source",F.lit("Storage"))
@@ -1092,12 +1090,36 @@ def join_ciam(config,profile_df,spark, partition_date,LOGGER,start_date,end_date
     format = ""
 
     if incremental == "False" or incremental == False:
+        ##load open
         ciam_open_url = config['ciamPath']
 
-        ciam_open = f"{ciam_open_url}/ods={partition_date}/"
+        ciam_open = f"{ciam_open_url}/ods={end_date}/"
+        ciam_archive = f"{ciam_open_url}/ods={start_date}/"
+        paths = [ciam_open,ciam_archive]
         format = "orc"
-        df_ciam = spark.read.load(ciam_open, format=format)
-        
+
+        try:
+            df_ciam = spark.read.load(paths, format=format)
+        except:
+            df_ciam = spark.read.load(paths[0], format=format)
+        df_ciam = df_ciam.drop("rowid", "s_startdt", "s_starttime", "s_enddt", "s_endtime", "s_deleted_flag", "c_journaltime", "c_transactionid", "c_operationtype", "c_userid", "ods")
+
+        #load non-open
+        path = config['ciamPath'].replace("all_diffen_open","all_diffen_nonopen")
+        resource_name = "all_edwcustomer"
+        exe = "/nds="
+
+        bucket,prefix = get_bucket(path,resource_name)
+        available_partitions = list_folders_in_path(bucket, prefix,LOGGER,start_date,end_date)
+
+        if len(available_partitions) == 0:
+            available_partitions = get_latest_partition(bucket, prefix,LOGGER,start_date)
+        partition_paths = getpaths(available_partitions,resource_name,path,exe)
+        df_ciam_2 = spark.read.load(partition_paths, format=format)
+        df_ciam_2 = df_ciam_2.drop("rowid", "s_startdt", "s_starttime", "s_enddt", "s_endtime", "s_deleted_flag", "c_journaltime", "c_transactionid", "c_operationtype", "c_userid", "nds")
+
+        df_ciam = df_ciam.unionAll(df_ciam_2)
+
     else:
         format = "avro"
         path = config['ciamPath'].replace("all_diffen_open","all_storage")
@@ -1111,9 +1133,10 @@ def join_ciam(config,profile_df,spark, partition_date,LOGGER,start_date,end_date
             available_partitions = get_latest_partition(bucket, prefix,LOGGER,start_date)
         partition_paths = getpaths(available_partitions,resource_name,path,exe)
         df_ciam = spark.read.load(partition_paths, format=format)
+        df_ciam = df_ciam.drop("rowid", "s_startdt", "s_starttime", "s_enddt", "s_endtime", "s_deleted_flag", "c_journaltime", "c_transactionid", "c_operationtype", "c_userid", "vds")
 
     
-    df_ciam = df_ciam.drop("rowid", "s_startdt", "s_starttime", "s_enddt", "s_endtime", "s_deleted_flag", "c_journaltime", "c_transactionid", "c_operationtype", "c_userid", "ods")
+    
     df_ciam = df_ciam.toDF(*["ciam_" + c for c in df_ciam.columns])
     df_ciam = df_ciam.withColumn("ciam_email", F.lower(F.col("ciam_email")))
     profile_df = profile_df.withColumn("BookerEmailAddress", F.lower(F.col("BookerEmailAddress")))
