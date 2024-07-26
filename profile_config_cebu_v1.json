@@ -1035,6 +1035,14 @@
         {
             "attributeName": "FirstName",
             "sourceColumns": [
+				{
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "FirstName"
+                },
                 {
                     "entityName": "all_bookingpassenger",
                     "columnName": "FirstName"
@@ -1066,6 +1074,14 @@
             "attributeName": "MiddleName",
             "sourceColumns": [
                 {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "MiddleName"
+                },
+                {
                     "entityName": "all_bookingpassenger",
                     "columnName": "MiddleName"
                 },
@@ -1095,6 +1111,14 @@
         {
             "attributeName": "LastName",
             "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "LastName"
+                },
                 {
                     "entityName": "all_bookingpassenger",
                     "columnName": "LastName"
@@ -1126,6 +1150,14 @@
             "attributeName": "HonorificPrefix",
             "sourceColumns": [
                 {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "Title"
+                },
+                {
                     "entityName": "all_bookingpassenger",
                     "columnName": "Title"
                 },
@@ -1156,6 +1188,14 @@
             "attributeName": "HonorificSuffix",
             "sourceColumns": [
                 {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "Suffix"
+                },
+                {
                     "entityName": "all_bookingpassenger",
                     "columnName": "Suffix"
                 },
@@ -1185,6 +1225,14 @@
         {
             "attributeName": "EmailAddress",
             "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "EmailAddress"
+                },
                 {
                     "entityName": "all_passengeraddress",
                     "columnName": "EmailAddress"
@@ -1220,6 +1268,14 @@
             "attributeName": "Phone",
             "sourceColumns": [
                 {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "HomePhone"
+                },
+                {
                     "entityName": "all_passengeraddress",
                     "columnName": "Phone"
                 },
@@ -1253,6 +1309,14 @@
         {
             "attributeName": "City",
             "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "City"
+                },
                 {
                     "entityName": "all_passengeraddress",
                     "columnName": "City"
@@ -1288,6 +1352,14 @@
             "attributeName": "State",
             "sourceColumns": [
                 {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "ProvinceState"
+                },
+                {
                     "entityName": "all_passengeraddress",
                     "columnName": "ProvinceState"
                 },
@@ -1321,6 +1393,14 @@
         {
             "attributeName": "ZipCode",
             "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "PostalCode"
+                },
                 {
                     "entityName": "all_passengeraddress",
                     "columnName": "PostalCode"
@@ -1356,6 +1436,14 @@
             "attributeName": "CountryCode",
             "sourceColumns": [
                 {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "CountryCode"
+                },
+                {
                     "entityName": "all_passengeraddress",
                     "columnName": "CountryCode"
                 },
@@ -1389,6 +1477,7 @@
         {
             "attributeName": "DateOfBirth",
             "sourceColumns": [
+                
                 {
                     "entityName": "all_bookingpassenger",
                     "columnName": "DOB"
@@ -1410,7 +1499,7 @@
                     "columnName": "PersonID"
                 }
             ],
-            "transformationFunction": "GetDetails"
+            "transformationFunction": "GetInfo"
         },
         {
             "attributeName": "Gender",
@@ -1436,7 +1525,7 @@
                     "columnName": "PersonID"
                 }
             ],
-            "transformationFunction": "GetDetails"
+            "transformationFunction": "GetInfo"
         },
         {
             "attributeName": "Nationality",
@@ -1462,7 +1551,7 @@
                     "columnName": "PersonID"
                 }
             ],
-            "transformationFunction": "GetDetails"
+            "transformationFunction": "GetInfo"
         },
         {
             "attributeName": "ResidentCountry",
@@ -1488,11 +1577,19 @@
                     "columnName": "PersonID"
                 }
             ],
-            "transformationFunction": "GetDetails"
+            "transformationFunction": "GetInfo"
         },
         {
             "attributeName": "CustomerNumber",
             "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "CustomerNumber"
+                },
                 {
                     "entityName": "all_bookingpassenger",
                     "columnName": "CustomerNumber"
@@ -1657,6 +1754,22 @@
         {
             "attributeName": "StreetAddress",
             "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine1"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine2"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine3"
+                },
                 {
                     "entityName": "all_passengeraddress",
                     "columnName": "AddressLine1"
@@ -2299,6 +2412,14 @@
         {
             "attributeName": "BookingChannel",
             "sourceColumns": [
+                {
+                    "entityName": "all_booking",
+                    "columnName": "ReceivedBy"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "ChannelType"
+                },
                 {
                     "entityName": "all_booking",
                     "columnName": "ChannelType"
@@ -3543,6 +3664,64 @@
 
             ],
             "transformationFunction": "Gettvouchfim"
+        },
+        {
+            "attributeName": "IsBookerFlier",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "NameType"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetIsBookerFlier"
         }
         
     ],

@@ -820,7 +820,7 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
             #profile_df = spark.sql("select *,concat(all_bookingpassenger_PassengerID,'_',all_person_PersonID) as " + each_transformation['attributeName'] + " from profiles")
             query = "concat(all_bookingpassenger_PassengerID,'_',all_person_PersonID) as " + each_transformation['attributeName'] 
             new_column_queries.append(query)
-        elif each_transformation['transformationFunction'] == 'GetIsRegistered':
+        elif each_transformation['transformationFunction'] == 'GetIsRegistered' or each_transformation['transformationFunction'] == 'GetIsBookerFlier':
             # profile_df = spark.sql("""
             #     select *, 
             #     case when """+each_transformation['sourceColumns'][0]['entityName']+"""_"""+each_transformation['sourceColumns'][0]['columnName']+""" is null and """+each_transformation['sourceColumns'][1]['entityName']+"""_"""+each_transformation['sourceColumns'][1]['columnName']+""" is null then
@@ -845,7 +845,7 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
             #     end as """+each_transformation['attributeName']
             query = f"""
                     CASE
-                        WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) != 'anonymous' THEN 
+                        WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) NOT IN ('anonymous', 'omnix','omnixapi') THEN 
                             CASE 
                                 WHEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']} IS NULL 
                                     AND {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']} IS NULL THEN
@@ -895,16 +895,41 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
             new_column_queries = list()
         elif each_transformation['transformationFunction'] == 'GetDetails':
             # profile_df = spark.sql("select *,case when IsRegistered = 'Yes' then " + each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + " else " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " end as " + each_transformation['attributeName'] + " from profiles")
+            # query = "case when IsRegistered = 'Yes' then " + each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + " else " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " end as " + each_transformation['attributeName']
+            query = f"""
+			CASE 
+				WHEN IsRegistered = 'Yes' THEN
+					CASE
+						WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) IN ('anonymous', 'omnix','omnixapi') THEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']}['P']
+						ELSE {each_transformation['sourceColumns'][3]['entityName']}_{each_transformation['sourceColumns'][3]['columnName']}
+					END
+				ELSE {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']}
+			END AS {each_transformation['attributeName']}
+            """
+            new_column_queries.append(query)
+        elif each_transformation['transformationFunction'] == 'GetInfo':
+            # profile_df = spark.sql("select *,case when IsRegistered = 'Yes' then " + each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + " else " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " end as " + each_transformation['attributeName'] + " from profiles")
             query = "case when IsRegistered = 'Yes' then " + each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + " else " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " end as " + each_transformation['attributeName']
+            
             new_column_queries.append(query)
         elif each_transformation['transformationFunction'] == 'GetDetailsPhone':
             # map[map_keys(map)[0]]
-            personphonecolname = each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + \
-                "[map_keys("+each_transformation['sourceColumns'][1]['entityName'] + \
+            personphonecolname = each_transformation['sourceColumns'][3]['entityName'] + "_" + each_transformation['sourceColumns'][3]['columnName'] + \
+                "[map_keys("+each_transformation['sourceColumns'][3]['entityName'] + \
                 "_" + \
-                each_transformation['sourceColumns'][1]['columnName']+")[0]]"
+                each_transformation['sourceColumns'][3]['columnName']+")[0]]"
             # profile_df = spark.sql("select *, case when IsRegistered = 'Yes' then " + personphonecolname + " else " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " end as " + each_transformation['attributeName'] + " from profiles")
-            query = "case when IsRegistered = 'Yes' then " + personphonecolname + " else " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " end as " + each_transformation['attributeName']
+            # query = "case when IsRegistered = 'Yes' then " + personphonecolname + " else " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " end as " + each_transformation['attributeName']
+            query = f"""
+			CASE 
+				WHEN IsRegistered = 'Yes' THEN
+					CASE
+						WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) IN ('anonymous', 'omnix','omnixapi') THEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']}['P']
+						ELSE {personphonecolname}
+					END
+				ELSE {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']}
+			END AS {each_transformation['attributeName']}
+            """
             new_column_queries.append(query)
         elif each_transformation['transformationFunction'] == 'GetPassportNumber':
             passcol = each_transformation['transformationFunction'] + "_" + \
@@ -923,21 +948,37 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
             profile_df.createOrReplaceTempView("profiles")
             new_column_queries = list()
         elif each_transformation['transformationFunction'] == 'GetStreetAddress':
-            passcols = ", ".join([each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'],
-                                  each_transformation['sourceColumns'][1]['entityName'] +
+            passcols = ", ".join([each_transformation['sourceColumns'][4]['entityName'] + "_" + each_transformation['sourceColumns'][4]['columnName'],
+                                  each_transformation['sourceColumns'][5]['entityName'] +
                                   "_" +
-                                  each_transformation['sourceColumns'][1]['columnName'],
-                                  each_transformation['sourceColumns'][2]['entityName'] +
+                                  each_transformation['sourceColumns'][5]['columnName'],
+                                  each_transformation['sourceColumns'][6]['entityName'] +
                                   "_" +
-                                  each_transformation['sourceColumns'][2]['columnName']
+                                  each_transformation['sourceColumns'][6]['columnName']
                                   ])
-            personcols = ", ".join([each_transformation['sourceColumns'][3]['entityName'] + "_" + each_transformation['sourceColumns'][3]['columnName'],
-                                    each_transformation['sourceColumns'][4]['entityName'] +
+            personcols = ", ".join([each_transformation['sourceColumns'][7]['entityName'] + "_" + each_transformation['sourceColumns'][7]['columnName'],
+                                    each_transformation['sourceColumns'][8]['entityName'] +
                                     "_" +
-                                    each_transformation['sourceColumns'][4]['columnName'],
-                                    each_transformation['sourceColumns'][5]['entityName'] + "_" + each_transformation['sourceColumns'][5]['columnName']])
+                                    each_transformation['sourceColumns'][8]['columnName'],
+                                    each_transformation['sourceColumns'][9]['entityName'] + "_" + each_transformation['sourceColumns'][9]['columnName']])
+            
+            contactpersoncols = ", ".join([each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName']+ "['P']" ,
+                                    each_transformation['sourceColumns'][2]['entityName'] +
+                                    "_" +
+                                    each_transformation['sourceColumns'][2]['columnName']+"['P']",
+                                    each_transformation['sourceColumns'][3]['entityName'] + "_" + each_transformation['sourceColumns'][3]['columnName']+"['P']"])
             # profile_df = spark.sql("select *, case when IsRegistered = 'Yes' then " + "concat_ws(' ', " + personcols + ") else concat_ws(' ', " + passcols + ") end as " + each_transformation['attributeName'] + " from profiles")
-            query = "case when IsRegistered = 'Yes' then " + "concat_ws(' ', " + personcols + ") else concat_ws(' ', " + passcols + ") end as " + each_transformation['attributeName']
+            # query = "case when IsRegistered = 'Yes' then " + "concat_ws(' ', " + personcols + ") else concat_ws(' ', " + passcols + ") end as " + each_transformation['attributeName']
+            query = f"""
+			CASE 
+				WHEN IsRegistered = 'Yes' THEN
+					CASE
+						WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) IN ('anonymous', 'omnix','omnixapi') THEN concat_ws(' ',{contactpersoncols})
+						ELSE concat_ws(' ',{personcols})
+					END
+				ELSE concat_ws(' ',{passcols})
+			END AS {each_transformation['attributeName']}
+            """
             new_column_queries.append(query)
         elif each_transformation['transformationFunction'] == 'GetGoIdFun':
             # profile_df = spark.sql("select *, case when IsRegistered = 'Yes' then " + each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + "['OAFF'] else " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + "['OAFF'] end as " + each_transformation['attributeName'] + " from profiles")
@@ -1047,7 +1088,7 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
         elif each_transformation['transformationFunction'] == 'GetBookerInformation':
             # profile_df = spark.sql("select *, " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " as " + each_transformation['attributeName'] + " from profiles")
             # query = each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " as " + each_transformation['attributeName']
-            query = f"case when lower({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) = 'anonymous' then {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']}['P'] else {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']} end as {each_transformation['attributeName']}"
+            query = f"case when lower({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) IN ('anonymous', 'omnix','omnixapi') then {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']}['P'] else {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']} end as {each_transformation['attributeName']}"
 
             new_column_queries.append(query)
         elif each_transformation['transformationFunction'] == 'GetBookerPassportNumber':
@@ -1074,7 +1115,7 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
             # query = each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + "['M'] as " + each_transformation['attributeName']
             query = f"""
                     CASE 
-                        WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) = 'anonymous' 
+                        WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) IN ('anonymous', 'omnix','omnixapi')
                         THEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']}['P'] 
                         ELSE {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']}['M'] 
                     END AS {each_transformation['attributeName']}
@@ -1086,7 +1127,7 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
             # query = each_transformation['sourceColumns'][0]['entityName'] + "_" +  each_transformation['sourceColumns'][0]['columnName'] + "['H'] as " + each_transformation['attributeName']
             query = f"""
                     CASE 
-                        WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) = 'anonymous' 
+                        WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) IN ('anonymous', 'omnix','omnixapi')
                         THEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']}['P']
                         ELSE {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']}['H'] 
                     END AS {each_transformation['attributeName']}
@@ -1099,7 +1140,7 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
             # query = "concat_ws(', ', " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + ", " + each_transformation['sourceColumns'][1]['entityName'] + "_" + each_transformation['sourceColumns'][1]['columnName'] + ", " + each_transformation['sourceColumns'][2]['entityName'] + "_" + each_transformation['sourceColumns'][2]['columnName'] + ") as " + each_transformation['attributeName']
             query = f"""
                     CASE 
-                        WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) = 'anonymous' 
+                        WHEN LOWER({each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']}) IN ('anonymous', 'omnix','omnixapi')
                         THEN CONCAT_WS(', ',
                             {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']}['P'],
                             {each_transformation['sourceColumns'][2]['entityName']}_{each_transformation['sourceColumns'][2]['columnName']}['P'],
@@ -1141,7 +1182,22 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
         elif each_transformation['transformationFunction'] == 'GetBookingChannel':
             # if col = 0 then Default if col = 1 then Direct if col = 2 then Web if col = 3 then GDS if col = 4 then API
             # profile_df = spark.sql("select *, case when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 0 then 'Default' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 1 then 'Direct' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 2 then 'Web' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 3 then 'GDS' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 4 then 'API' end as " + each_transformation['attributeName'] + " from profiles")
-            query = "case when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 0 then 'Default' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 1 then 'Direct' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 2 then 'Web' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 3 then 'GDS' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 4 then 'API' end as " + each_transformation['attributeName']
+            # query = "case when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 0 then 'Default' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 1 then 'Direct' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 2 then 'Web' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 3 then 'GDS' when " + each_transformation['sourceColumns'][0]['entityName'] + "_" + each_transformation['sourceColumns'][0]['columnName'] + " = 4 then 'API' end as " + each_transformation['attributeName']
+            query = f"""
+                        CASE 
+                            WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} in ('Web', 'dotREZ', 'dotREZMob') THEN 'Web'
+                            WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} LIKE 'Android 5.0%' THEN 'Mobile Web - Android'
+                            WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} LIKE 'Android%' THEN 'Mobile App - Android'
+							WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} LIKE 'iOS 5.0.CPU' THEN 'Mobile Web - iOS'
+							WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} LIKE 'iOS 5.0.Intel' THEN 'Mobile Web - iOS'
+							WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} = 'WeChat' THEN 'Wechat'
+							WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} LIKE '%SPL%' THEN 'SPL'
+							WHEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']} = 1 THEN 'Direct'
+                            WHEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']} = 2 THEN 'Web'
+							WHEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']} = 3 THEN 'GDS'
+							WHEN {each_transformation['sourceColumns'][1]['entityName']}_{each_transformation['sourceColumns'][1]['columnName']} = 4 THEN 'API'
+                            
+                        END AS {each_transformation['attributeName']}"""
             new_column_queries.append(query)
         elif each_transformation["transformationFunction"] == "GetPaymentMethodCode":
             # profile_df = spark.sql("select *, "+ each_transformation['sourceColumns'][0]['entityName']+"_" + each_transformation['sourceColumns'][0]['columnName']+" as "+each_transformation['attributeName']+" from profiles")
@@ -1155,7 +1211,6 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
                             WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} = 1 THEN 'CheckedIn'
                             WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} = 2 THEN 'Boarded'
                             WHEN {each_transformation['sourceColumns'][0]['entityName']}_{each_transformation['sourceColumns'][0]['columnName']} = 3 THEN 'NoShow'
-                            ELSE 'Default'
                         END AS {each_transformation['attributeName']}
                         """
             new_column_queries.append(query)
