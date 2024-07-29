@@ -3664,66 +3664,7 @@
 
             ],
             "transformationFunction": "Gettvouchfim"
-        },
-        {
-            "attributeName": "IsBookerFlier",
-            "sourceColumns": [
-                {
-                    "entityName": "all_personname",
-                    "columnName": "FirstName"
-                },
-                {
-                    "entityName": "all_bookingpassenger",
-                    "columnName": "FirstName"
-                },
-                {
-                    "entityName": "all_bookingpassenger",
-                    "columnName": "LastName"
-                },
-                {
-                    "entityName": "all_personname",
-                    "columnName": "FirstName"
-                },
-                {
-                    "entityName": "all_personname",
-                    "columnName": "LastName"
-                },
-                {
-                    "entityName": "all_bookingcontact",
-                    "columnName": "FirstName"
-                },
-                {
-                    "entityName": "all_bookingcontact",
-                    "columnName": "LastName"
-                },
-                {
-                    "entityName": "all_bookingpassenger",
-                    "columnName": "FirstName"
-                },
-                {
-                    "entityName": "all_bookingpassenger",
-                    "columnName": "LastName"
-                },
-                {
-                    "entityName": "all_bookingpassenger",
-                    "columnName": "PassengerID"
-                },
-                {
-                    "entityName": "all_personname",
-                    "columnName": "PersonID"
-                },
-                {
-                    "entityName": "all_personname",
-                    "columnName": "NameType"
-                },
-                {
-                    "entityName": "all_person",
-                    "columnName": "PersonID"
-                }
-            ],
-            "transformationFunction": "GetIsBookerFlier"
         }
-        
     ],
     "storageDetails": [
         {

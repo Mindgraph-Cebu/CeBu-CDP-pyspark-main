@@ -820,7 +820,7 @@ def transformationsNew(config, profile_df, transaction_dict, spark,LOGGER,partit
             #profile_df = spark.sql("select *,concat(all_bookingpassenger_PassengerID,'_',all_person_PersonID) as " + each_transformation['attributeName'] + " from profiles")
             query = "concat(all_bookingpassenger_PassengerID,'_',all_person_PersonID) as " + each_transformation['attributeName'] 
             new_column_queries.append(query)
-        elif each_transformation['transformationFunction'] == 'GetIsRegistered' or each_transformation['transformationFunction'] == 'GetIsBookerFlier':
+        elif each_transformation['transformationFunction'] == 'GetIsRegistered':
             # profile_df = spark.sql("""
             #     select *, 
             #     case when """+each_transformation['sourceColumns'][0]['entityName']+"""_"""+each_transformation['sourceColumns'][0]['columnName']+""" is null and """+each_transformation['sourceColumns'][1]['entityName']+"""_"""+each_transformation['sourceColumns'][1]['columnName']+""" is null then
@@ -1487,7 +1487,7 @@ def compute_profile(config_path, spark,LOGGER,start_date,end_date,incremental):
 
     profile_df = profile_df.dropDuplicates(subset=["PassengerID"])
     LOGGER.info("ccai - profile row count after dropping duplicates: " + str(profile_df.count()))
-    
+    profile_df = profile_df.withColumn("IsBookerFlier",F.col("IsRegistered"))
     # profile_df = profile_df.withColumnRenamed("all_booking_Source", "Source")
     
     save_path = config['storageDetails'][0]['pathUrl'] + \
