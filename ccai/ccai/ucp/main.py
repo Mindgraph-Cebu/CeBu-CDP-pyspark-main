@@ -80,7 +80,7 @@ def phonetic_encode(sm, name):
     except:
         return "CCAI_NULL"
 
-def get_old_passengers_paths(new_passengers_base_path,day0_date,end_date):
+def get_old_passengers_paths(new_passengers_base_path,day0_date,end_date,LOGGER):
     bucket_name = new_passengers_base_path.split("/")[2]
     prefix = "new_passengers/"
     s3 = boto3.client('s3')
@@ -93,6 +93,7 @@ def get_old_passengers_paths(new_passengers_base_path,day0_date,end_date):
         if day0_date <= date_str <= end_date:
             s3_path = 's3a://{}/new_passengers/p_date={}/'.format(bucket_name,date_str)
             paths.append(s3_path)
+    LOGGER.info(f"ccai - old passengers path - {str(paths)}")
     return paths
 
 
@@ -228,7 +229,7 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
                                        .withColumn("pLastName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("LastName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.col("LastName")))))) \
                                        .select("ProvisionalPrimaryKey","pFirstName","pLastName","DateOfBirth","passenger_hash")#.dropDuplicates()
         observed_passengers.cache()
-        old_passengers = spark.read.option("basePath",new_passengers_base_path).parquet(*get_old_passengers_paths(new_passengers_base_path,day0_date,end_date)).drop("p_date").withColumnRenamed("DateOfBirth","DateOfBirth_r").withColumnRenamed("passenger_hash","passenger_hash_r")
+        old_passengers = spark.read.option("basePath",new_passengers_base_path).parquet(*get_old_passengers_paths(new_passengers_base_path,day0_date,end_date,LOGGER)).drop("p_date").withColumnRenamed("DateOfBirth","DateOfBirth_r").withColumnRenamed("passenger_hash","passenger_hash_r")
 
         retained_passengers = old_passengers.join(observed_passengers, ["pFirstName","pLastName"])\
                                             .withColumn("dateSim", get_date_similarity(F.col("DateOfBirth"), F.col("DateOfBirth_r")))\
