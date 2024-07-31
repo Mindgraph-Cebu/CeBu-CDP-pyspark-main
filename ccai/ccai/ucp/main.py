@@ -117,21 +117,22 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
     df_dedupe.createOrReplaceTempView("dedupe")
     num_rows_in = df_profile.count()
     num_rows_dedupe = df_dedupe.count()
-    num_null_hash_count = df_dedupe.where('passenger_hash is null').count()
-    LOGGER.info("ccai -> null hash count : " + str(num_null_hash_count))
+    
 
     df_profile = spark.sql("select a.*,b.passenger_hash from profile as a left join dedupe as b on a.ProvisionalPrimaryKey = b.ProvisionalPrimaryKey")
-    df_profile = df_profile.withColumn("passenger_hash", F.max("passenger_hash").over(W().partitionBy("FirstName","LastName","DateOfBirth")))
-    df_profile = df_profile.withColumn("passenger_hash", F.when(F.col("passenger_hash").isNull(), generate_random_string()).otherwise(F.col("passenger_hash")))
+    num_null_hash_count = df_profile.where('passenger_hash is null').count()
+    LOGGER.info("ccai -> null hash count : " + str(num_null_hash_count))
+    # df_profile = df_profile.withColumn("passenger_hash", F.max("passenger_hash").over(W().partitionBy("FirstName","LastName","DateOfBirth")))
+    # df_profile = df_profile.withColumn("passenger_hash", F.when(F.col("passenger_hash").isNull(), generate_random_string()).otherwise(F.col("passenger_hash")))
 
-    ##change1
-    df_profile = df_profile.withColumn("mfirstname", when(col("FirstName").isNotNull(), lower(col("FirstName"))).otherwise("Unknown"))
-    df_profile = df_profile.withColumn("mlastname", when(col("LastName").isNotNull(), lower(col("LastName"))).otherwise("Unknown"))
+    # ##change1
+    # df_profile = df_profile.withColumn("mfirstname", when(col("FirstName").isNotNull(), lower(col("FirstName"))).otherwise("Unknown"))
+    # df_profile = df_profile.withColumn("mlastname", when(col("LastName").isNotNull(), lower(col("LastName"))).otherwise("Unknown"))
 
-    df_profile = df_profile.withColumn("passenger_hash", F.max("passenger_hash").over(W().partitionBy("mfirstname","mlastname","DateOfBirth")))
+    # df_profile = df_profile.withColumn("passenger_hash", F.max("passenger_hash").over(W().partitionBy("mfirstname","mlastname","DateOfBirth")))
 
-    ##change 2##
-    df_profile = df_profile.drop("mfirstname", "mlastname")
+    # ##change 2##
+    # df_profile = df_profile.drop("mfirstname", "mlastname")
 
     firstname_filters = [
         "tba",
@@ -202,7 +203,7 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
                                                F.col("passenger_hash").alias("passenger_hash"))\
                                        .filter("(FirstName not in ('{}')) and (LastName not in ('{}'))".format("','".join(firstname_filters), "','".join(lastname_filters)))\
                                        .withColumn("pFirstName",F.trim(F.regexp_replace(F.regexp_replace(F.col("FirstName"), "\.", " "), "^(mr|ms|dr|rev|prof|sir|madam|miss|mrs|st)", "")))\
-                                       .withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"),F.lower("pFirstName")).otherwise(F.trim(phonetic_encode_udf(F.split(F.lower("pFirstName"), " ").getItem(0))))) \
+                                       .withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"),F.lower("pFirstName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.split(F.col("pFirstName"), " ").getItem(0)))))) \
                                        .withColumn("pLastName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("LastName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.col("LastName")))))) \
                                        .select("pFirstName","pLastName","DateOfBirth","passenger_hash").dropDuplicates()
         
@@ -224,7 +225,7 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
                                                F.col("ProvisionalPrimaryKey").alias("ProvisionalPrimaryKey"))\
                                        .filter("(FirstName not in ('{}')) and (LastName not in ('{}'))".format("','".join(firstname_filters), "','".join(lastname_filters)))\
                                        .withColumn("pFirstName",F.trim(F.regexp_replace(F.regexp_replace(F.col("FirstName"), "\.", " "), "^(mr|ms|dr|rev|prof|sir|madam|miss|mrs|st)", "")))\
-                                       .withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"),F.lower("pFirstName")).otherwise(F.trim(phonetic_encode_udf(F.split(F.lower("pFirstName"), " ").getItem(0)))))\
+                                       .withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"),F.lower("pFirstName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.split(F.col("pFirstName"), " ").getItem(0))))))\
                                        .withColumn("pLastName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("LastName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.col("LastName")))))) \
                                        .select("ProvisionalPrimaryKey","pFirstName","pLastName","DateOfBirth","passenger_hash")#.dropDuplicates()
         observed_passengers.cache()
