@@ -488,42 +488,43 @@ def compute_ui(config_path, spark, profile_path, LOGGER,day0_date):
     record_count = df.count()
     LOGGER.info("ccai -> Load Data after dropping dups : {} rows".format( record_count))
     
-    exchange_rates = {
-        "THB": 0.657845,
-        "AED": 13.203984,
-        "MYR": 7.624044,
-        "EUR": 0.011741,
-        "OMR": 0.001127,
-        "KWD": 0.003423,
-        "VND": 254.181015,
-        "USD": 0.019467,
-        "AUD": 0.025128,
-        "CNY": 0.126146,
-        "PHP": 1.0,
-        "KRW": 22.734294,
-        "JPY": 2.180405,
-        "HKD": 0.151516,
-        "TWD": 0.539236,
-        "QAR": 0.071024,
-        "MOP": 0.156013,
-        "IDR": 278.384131,
-        "SAR": 0.073001,
-        "INR": 1.427856,
-        "BHD": 0.007356,
-        "SGD": 0.026176,
-        "BND": 0.026101,
-    }
-    for curr in exchange_rates:
-        df = df.withColumn(
-            curr,
-            when(
-                col("BookingCurrency") == curr,
-                col("Revenue").cast("float") * exchange_rates[curr],
-            ).otherwise(None),
-        )
+    # exchange_rates = {
+    #     "THB": 0.657845,
+    #     "AED": 13.203984,
+    #     "MYR": 7.624044,
+    #     "EUR": 0.011741,
+    #     "OMR": 0.001127,
+    #     "KWD": 0.003423,
+    #     "VND": 254.181015,
+    #     "USD": 0.019467,
+    #     "AUD": 0.025128,
+    #     "CNY": 0.126146,
+    #     "PHP": 1.0,
+    #     "KRW": 22.734294,
+    #     "JPY": 2.180405,
+    #     "HKD": 0.151516,
+    #     "TWD": 0.539236,
+    #     "QAR": 0.071024,
+    #     "MOP": 0.156013,
+    #     "IDR": 278.384131,
+    #     "SAR": 0.073001,
+    #     "INR": 1.427856,
+    #     "BHD": 0.007356,
+    #     "SGD": 0.026176,
+    #     "BND": 0.026101,
+    # }
+    # for curr in exchange_rates:
+    #     df = df.withColumn(
+    #         curr,
+    #         when(
+    #             col("BookingCurrency") == curr,
+    #             col("Revenue").cast("float") * exchange_rates[curr],
+    #         ).otherwise(None),
+    #     )
 
-    df = df.withColumn("New_Revenue", greatest(*[col(curr) for curr in exchange_rates]))
-    df = df.drop(*list(exchange_rates.keys()))
+    # df = df.withColumn("New_Revenue", greatest(*[col(curr) for curr in exchange_rates]))
+    # df = df.drop(*list(exchange_rates.keys()))
+    df = df.withColumn("New_Revenue",F.col("Revenue"))
     df = df.withColumn(
         "Age",
         when(df.DateOfBirth == "Unknown", "Unknown").otherwise(
