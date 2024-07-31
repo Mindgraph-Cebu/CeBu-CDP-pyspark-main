@@ -1,0 +1,3717 @@
+{
+    "entityDetails": [
+        {
+            "entityName": "all_bookingpassenger",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "true",
+            "isMandatory": "true",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_bookingpassenger",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "BookingID"
+        },
+        {
+            "entityName": "all_booking",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "true",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_booking",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "BookingID"
+        },
+        {
+            "entityName": "all_bookingcontact",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_bookingcontact",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "BookingID"
+        },
+        {
+            "entityName": "all_passengeraddress",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_passengeraddress",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "PassengerID"
+        },
+        {
+            "entityName": "all_passengertraveldoc",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_passengertraveldoc",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "PassengerID"
+        },
+        {
+            "entityName": "all_passengerjourneysegment",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_passengerjourneysegment",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "PassengerID"
+        },
+        {
+            "entityName": "all_passengerjourneyleg",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_passengerjourneyleg",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "PassengerID"
+        },
+        {
+            "entityName": "all_passengerfee",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_passengerfee",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "PassengerID"
+        },
+        {
+            "entityName": "all_agent",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "true",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_agent",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "AgentID"
+        },
+        {
+            "entityName": "all_person",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "true",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_person",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "PersonID"
+        },
+        {
+            "entityName": "all_personname",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_personname",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "PersonID"
+        },
+        {
+            "entityName": "all_personemail",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_personemail",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "PersonID"
+        },
+        {
+            "entityName": "all_personphone",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_personphone",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "PersonID"
+        },
+        {
+            "entityName": "all_personaddress",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_personaddress",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "PersonID"
+        },
+        {
+            "entityName": "all_traveldoc",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_traveldoc",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "PersonID"
+        },
+        {
+            "entityName": "all_fee",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_fee",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "FeeCode"
+        },
+        {
+            "entityName": "all_payment",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_payment",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "BookingID"
+        },
+        {
+            "entityName": "all_voucher",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_voucher",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "VoucherReference"
+        },
+        {
+            "entityName": "all_currencyconversionhistory",
+            "entityType": "snapshot",
+            "sourceType": "filesystem",
+            "dataFormat": "orc",
+            "fileSystem": "s3",
+            "isFact": "false",
+            "isMandatory": "false",
+            "loadLatest": "true",
+            "pathUrl": "s3a://edw-dl-process-data-qa/data/flatfiles/hdata/flatfiles_all_diffen_open/flatfiles_all_currencyconversionhistory",
+            "partitionDetails": {
+                "partitionColumn": [
+                    "ods"
+                ],
+                "partitionType": "daily",
+                "partitionFormat": [
+                    "yyyy-MM-dd"
+                ],
+                "numberOfPartitions": 1
+            },
+            "joinColumn": "VersionStartUTC"
+        }
+        
+
+    ],
+    "profileSchema": [
+        {
+            "columnName": "ProvisionalPrimaryKey",
+            "dataType": "string",
+            "defaultValue": "0_0"
+        },
+        {
+            "columnName": "PassengerID",
+            "dataType": "long",
+            "defaultValue": 0
+        },
+        {
+            "columnName": "Revenue",
+            "dataType": "double",
+            "defaultValue": 0.0
+        },
+        {
+            "columnName": "BookingID",
+            "dataType": "long",
+            "defaultValue": 0
+        },
+        {
+            "columnName": "TravelSoloOrGroup",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PersonID",
+            "dataType": "long",
+            "defaultValue": 0
+        },
+        {
+            "columnName": "IsRegistered",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PaymentMethodCode",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "FirstName",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "MiddleName",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "LastName",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "HonorificPrefix",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "HonorificSuffix",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "EmailAddress",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "Phone",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "City",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "State",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "ZipCode",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "CountryCode",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "DateOfBirth",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "Gender",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "Nationality",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "ResidentCountry",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "CustomerNumber",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PassportNumber",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "ExpiryDate",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "IssuingCountry",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "StreetAddress",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "GetGoID",
+            "dataType": "string",
+            "defaultValue": "None"
+        },
+        {
+            "columnName": "SeniorCitizenID",
+            "dataType": "string",
+            "defaultValue": "None"
+        },
+        {
+            "columnName": "BookedByAgentID",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "TravelOrigin",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "TravelDate",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "TravelBaggage",
+            "dataType": "string",
+            "defaultValue": "None"
+        },
+        {
+            "columnName": "TravelMeals",
+            "dataType": "string",
+            "defaultValue": "None"
+        },
+        {
+            "columnName": "TravelInsurance",
+            "dataType": "string",
+            "defaultValue": "None"
+        },
+        {
+            "columnName": "TravelSeat",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "TravelGetGoKeyedIn",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "IsPassenger",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "IsEmployee",
+            "dataType": "string",
+            "defaultValue": "No"
+        },
+        {
+            "columnName": "TravelDestination",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "IsEmployeeDependent",
+            "dataType": "string",
+            "defaultValue": "No"
+        },
+        {
+            "columnName": "BookerFirstName",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerMiddleName",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerLastName",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerEmailAddress",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookingDate",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookingCurrency",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookingChannel",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookedByPersonID",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerCity",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerState",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerZipCode",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerCountryCode",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerCustomerNumber",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerPassportNumber",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerType",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerMobile",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerHomePhone",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerStreetAddress",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "BookerGetGoID",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PrimaryContactFirstName",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PrimaryContactMiddleName",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PrimaryContactLastName",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PrimaryContactEmail",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PrimaryContactWorkPhone",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PrimaryContactHomePhone",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PrimaryContactCity",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PrimaryContactState",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PrimaryContactZipcode",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PrimaryContactCountryCode",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PrimaryContactCustomerNumber",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "AdditionalContactFirstName",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "AdditionalContactMiddleName",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "AdditionalContactLastName",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "AdditionalContactEmail",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "AdditionalContactWorkPhone",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "AdditionalContactHomePhone",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "AdditionalContactCity",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "AdditionalContactState",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "AdditionalContactZipcode",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "AdditionalContactCountryCode",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "AdditionalContactCustomerNumber",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "PrimaryContactStreetAddress",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "AdditionalContactStreetAddress",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "RecordLocator",
+            "dataType": "string",
+            "defaultValue": "Unknown"
+        },
+        {
+            "columnName": "Status",
+            "dataType": "integer",
+            "defaultValue": 999
+        },
+        {
+            "columnName": "BoardStatus",
+            "dataType": "string",
+            "defaultValue": "Default"
+        },
+        {
+            "columnName": "tvouchfim",
+            "dataType": "string",
+            "defaultValue": "None"
+        },
+        {
+            "columnName": "WithPromo",
+            "dataType": "integer",
+            "defaultValue": 0
+        }
+
+    ],
+    "columnMapping": [
+        {
+            "sourceEntity": "all_bookingpassenger",
+            "sourceColumn": "PassengerID",
+            "targetColumn": "PassengerID"
+        },
+        {
+            "sourceEntity": "all_bookingpassenger",
+            "sourceColumn": "TotalCost",
+            "targetColumn": "Revenue"
+        },
+        {
+            "sourceEntity": "all_bookingpassenger",
+            "sourceColumn": "BookingID",
+            "targetColumn": "BookingID"
+        },
+        {
+            "sourceEntity": "all_booking",
+            "sourceColumn": "RecordLocator",
+            "targetColumn": "RecordLocator"
+        },
+        {
+            "sourceEntity": "all_booking",
+            "sourceColumn": "Status",
+            "targetColumn": "Status"
+        }
+    ],
+    "attributeMapping": [
+        {
+            "attributeName": "TravelSoloOrGroup",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                }
+            ],
+            "transformationFunction": "GetTravelSoloOrGroup"
+        },
+        {
+            "attributeName": "PersonID",
+            "sourceColumns": [
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetPersonID"
+        },
+        {
+            "attributeName": "ProvisionalPrimaryKey",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetProvisionalPrimaryKey"
+        },
+        {
+            "attributeName": "IsRegistered",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "NameType"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetIsRegistered"
+        },
+        {
+            "attributeName": "PaymentMethodCode",
+            "sourceColumns": [
+                {
+                    "entityName": "all_payment",
+                    "columnName": "PaymentMethodCode"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_payment",
+                    "columnName": "BookingID"
+                }
+            ],
+            "transformationFunction": "GetPaymentMethodCode"
+        },
+        {
+            "attributeName": "FirstName",
+            "sourceColumns": [
+				{
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "NameType"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetDetails"
+        },
+        {
+            "attributeName": "MiddleName",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "MiddleName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "MiddleName"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "MiddleName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "NameType"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetDetails"
+        },
+        {
+            "attributeName": "LastName",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "NameType"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetDetails"
+        },
+        {
+            "attributeName": "HonorificPrefix",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "Title"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "Title"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "Title"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "NameType"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetDetails"
+        },
+        {
+            "attributeName": "HonorificSuffix",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "Suffix"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "Suffix"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "Suffix"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "NameType"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetDetails"
+        },
+        {
+            "attributeName": "EmailAddress",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "EmailAddress"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "EmailAddress"
+                },
+                {
+                    "entityName": "all_personemail",
+                    "columnName": "EMailAddress"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_personemail",
+                    "columnName": "IsDefault"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personemail",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetDetails"
+        },
+        {
+            "attributeName": "Phone",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "HomePhone"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "Phone"
+                },
+                {
+                    "entityName": "all_personphone",
+                    "columnName": "Number"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_personphone",
+                    "columnName": "IsDefault"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personphone",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetDetailsPhone"
+        },
+        {
+            "attributeName": "City",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "City"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "City"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "City"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "IsDefault"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetDetails"
+        },
+        {
+            "attributeName": "State",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "ProvinceState"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "ProvinceState"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "ProvinceState"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "IsDefault"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetDetails"
+        },
+        {
+            "attributeName": "ZipCode",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "PostalCode"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "PostalCode"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "PostalCode"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "IsDefault"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetDetails"
+        },
+        {
+            "attributeName": "CountryCode",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "CountryCode"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "CountryCode"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "CountryCode"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "IsDefault"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetDetails"
+        },
+        {
+            "attributeName": "DateOfBirth",
+            "sourceColumns": [
+                
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "DOB"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "DOB"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetInfo"
+        },
+        {
+            "attributeName": "Gender",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "Gender"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "Gender"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetInfo"
+        },
+        {
+            "attributeName": "Nationality",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "Nationality"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "Nationality"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetInfo"
+        },
+        {
+            "attributeName": "ResidentCountry",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "ResidentCountry"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "ResidentCountry"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetInfo"
+        },
+        {
+            "attributeName": "CustomerNumber",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+				{
+                    "entityName": "all_bookingcontact",
+                    "columnName": "CustomerNumber"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "CustomerNumber"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "CustomerNumber"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetDetails"
+        },
+        {
+            "attributeName": "PassportNumber",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocNumber"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocNumber"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "ExpirationDate"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocTypeCode"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "ExpirationDate"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocTypeCode"
+                }
+            ],
+            "transformationFunction": "GetPassportNumber"
+        },
+        {
+            "attributeName": "ExpiryDate",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "ExpirationDate"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "ExpirationDate"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "ExpirationDate"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocTypeCode"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "ExpirationDate"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocTypeCode"
+                }
+            ],
+            "transformationFunction": "GetPassportNumber"
+        },
+        {
+            "attributeName": "IssuingCountry",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "IssuedByCode"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "IssuedByCode"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "ExpirationDate"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocTypeCode"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "ExpirationDate"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocTypeCode"
+                }
+            ],
+            "transformationFunction": "GetPassportNumber"
+        },
+        {
+            "attributeName": "StreetAddress",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine1"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine2"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine3"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "AddressLine1"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "AddressLine2"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "AddressLine3"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "AddressLine1"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "AddressLine2"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "AddressLine3"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengeraddress",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetStreetAddress"
+        },
+        {
+            "attributeName": "GetGoID",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocNumber"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocNumber"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocTypeCode"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocTypeCode"
+                }
+            ],
+            "transformationFunction": "GetGoIdFun"
+        },
+        {
+            "attributeName": "SeniorCitizenID",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocNumber"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocNumber"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocTypeCode"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocTypeCode"
+                }
+            ],
+            "transformationFunction": "GetSeniorCitizenID"
+        },
+        {
+            "attributeName": "BookedByAgentID",
+            "sourceColumns": [
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                }
+            ],
+            "transformationFunction": "GetBookedByAgentID"
+        },
+        {
+            "attributeName": "TravelOrigin",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "DepartureStation"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "JourneyNumber"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "SegmentNumber"
+                }
+            ],
+            "transformationFunction": "GetTravelOriginAndDate"
+        },
+        {
+            "attributeName": "TravelDate",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "DepartureDate"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "PassengerID"
+                }
+            ],
+            "transformationFunction": "GetTravelOriginAndDate"
+        },
+        {
+            "attributeName": "TravelBaggage",
+            "sourceColumns": [
+                {
+                    "entityName": "all_fee",
+                    "columnName": "Name"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengerfee",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengerfee",
+                    "columnName": "FeeCode"
+                },
+                {
+                    "entityName": "all_fee",
+                    "columnName": "FeeCode"
+                }
+            ],
+            "transformationFunction": "GetTravelBaggageMealsInsurance"
+        },
+        {
+            "attributeName": "TravelMeals",
+            "sourceColumns": [
+                {
+                    "entityName": "all_fee",
+                    "columnName": "Name"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengerfee",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengerfee",
+                    "columnName": "FeeCode"
+                },
+                {
+                    "entityName": "all_fee",
+                    "columnName": "FeeCode"
+                }
+            ],
+            "transformationFunction": "GetTravelBaggageMealsInsurance"
+        },
+        {
+            "attributeName": "TravelInsurance",
+            "sourceColumns": [
+                {
+                    "entityName": "all_fee",
+                    "columnName": "Name"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengerfee",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengerfee",
+                    "columnName": "FeeCode"
+                },
+                {
+                    "entityName": "all_fee",
+                    "columnName": "FeeCode"
+                }
+            ],
+            "transformationFunction": "GetTravelBaggageMealsInsurance"
+        },
+        {
+            "attributeName": "TravelSeat",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengerjourneyleg",
+                    "columnName": "UnitDesignator"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengerjourneyleg",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengerjourneyleg",
+                    "columnName": "ModifiedUTC"
+                },
+                {
+                    "entityName": "all_passengerjourneyleg",
+                    "columnName": "LegNumber"
+                },
+                {
+                    "entityName": "all_passengerjourneyleg",
+                    "columnName": "SegmentID"
+                }
+            ],
+            "transformationFunction": "GetTravelSeat"
+        },
+        {
+            "attributeName": "TravelGetGoKeyedIn",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocNumber"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocTypeCode"
+                }
+            ],
+            "transformationFunction": "GetTravelGetGoKeyedIn"
+        },
+        {
+            "attributeName": "IsPassenger",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                }
+            ],
+            "transformationFunction": "GetIsPassenger"
+        },
+        {
+            "attributeName": "IsEmployee",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocNumber"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocNumber"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocTypeCode"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocTypeCode"
+                }
+            ],
+            "transformationFunction": "GetIsEmployee"
+        },
+        {
+            "attributeName": "TravelDestination",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "ArrivalStation"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "JourneyNumber"
+                }
+            ],
+            "transformationFunction": "GetTravelDestination"
+        },
+        {
+            "attributeName": "IsEmployeeDependent",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocNumber"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocNumber"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "PassengerID"
+                },
+                {
+                    "entityName": "all_passengertraveldoc",
+                    "columnName": "DocTypeCode"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocTypeCode"
+                }
+            ],
+            "transformationFunction": "GetIsEmployeeDependent"
+        },
+        {
+            "attributeName": "BookerFirstName",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "NameType"
+                }
+            ],
+            "transformationFunction": "GetBookerInformation"
+        },
+        {
+            "attributeName": "BookerMiddleName",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "MiddleName"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "MiddleName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "NameType"
+                }
+            ],
+            "transformationFunction": "GetBookerInformation"
+        },
+        {
+            "attributeName": "BookerLastName",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personname",
+                    "columnName": "NameType"
+                }
+            ],
+            "transformationFunction": "GetBookerInformation"
+        },
+        {
+            "attributeName": "BookerEmailAddress",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "EmailAddress"
+                },
+                {
+                    "entityName": "all_personemail",
+                    "columnName": "EMailAddress"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personemail",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personemail",
+                    "columnName": "IsDefault"
+                }
+            ],
+            "transformationFunction": "GetBookerInformation"
+        },
+        {
+            "attributeName": "BookingDate",
+            "sourceColumns": [
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingUTC"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                }
+            ],
+            "transformationFunction": "GetBookerDetails"
+        },
+        {
+            "attributeName": "BookingCurrency",
+            "sourceColumns": [
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CurrencyCode"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                }
+            ],
+            "transformationFunction": "GetBookerDetails"
+        },
+        {
+            "attributeName": "BookingChannel",
+            "sourceColumns": [
+                {
+                    "entityName": "all_booking",
+                    "columnName": "ReceivedBy"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "ChannelType"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "ChannelType"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                }
+            ],
+            "transformationFunction": "GetBookingChannel"
+        },
+        {
+            "attributeName": "BookedByPersonID",
+            "sourceColumns": [
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetBookerDetails"
+        },
+        {
+            "attributeName": "BookerCity",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "City"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "City"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "IsDefault"
+                }
+            ],
+            "transformationFunction": "GetBookerInformation"
+        },
+        {
+            "attributeName": "BookerState",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "ProvinceState"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "ProvinceState"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "IsDefault"
+                }
+            ],
+            "transformationFunction": "GetBookerInformation"
+        },
+        {
+            "attributeName": "BookerZipCode",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "PostalCode"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "PostalCode"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "IsDefault"
+                }
+            ],
+            "transformationFunction": "GetBookerInformation"
+        },
+        {
+            "attributeName": "BookerCountryCode",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "CountryCode"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "CountryCode"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "IsDefault"
+                }
+            ],
+            "transformationFunction": "GetBookerInformation"
+        },
+        {
+            "attributeName": "BookerCustomerNumber",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "CustomerNumber"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "CustomerNumber"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetBookerInformation"
+        },
+        {
+            "attributeName": "BookerPassportNumber",
+            "sourceColumns": [
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocNumber"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocTypeCode"
+                }
+            ],
+            "transformationFunction": "GetBookerPassportNumber"
+        },
+        {
+            "attributeName": "BookerType",
+            "sourceColumns": [
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonType"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                }
+            ],
+            "transformationFunction": "GetBookerType"
+        },
+        {
+            "attributeName": "BookerMobile",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "HomePhone"
+                },
+                {
+                    "entityName": "all_personphone",
+                    "columnName": "Number"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personphone",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personphone",
+                    "columnName": "IsDefault"
+                },
+                {
+                    "entityName": "all_personphone",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetBookerMobile"
+        },
+        {
+            "attributeName": "BookerHomePhone",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "HomePhone"
+                },
+                {
+                    "entityName": "all_personphone",
+                    "columnName": "Number"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personphone",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personphone",
+                    "columnName": "IsDefault"
+                },
+                {
+                    "entityName": "all_personphone",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetBookerHomePhone"
+        },
+        {
+            "attributeName": "BookerStreetAddress",
+            "sourceColumns": [
+                {
+                    "entityName": "all_personname",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine1"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine2"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine3"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "AddressLine1"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "AddressLine2"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "AddressLine3"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_personaddress",
+                    "columnName": "IsDefault"
+                }
+            ],
+            "transformationFunction": "GetBookerStreetAddress"
+        },
+        {
+            "attributeName": "BookerGetGoID",
+            "sourceColumns": [
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocNumber"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "CreatedUserID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "AgentID"
+                },
+                {
+                    "entityName": "all_agent",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_person",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "PersonID"
+                },
+                {
+                    "entityName": "all_traveldoc",
+                    "columnName": "DocTypeCode"
+                }
+            ],
+            "transformationFunction": "GetBookerGetGoID"
+        },
+        {
+            "attributeName": "PrimaryContactFirstName",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetPrimaryNames"
+        },
+        {
+            "attributeName": "PrimaryContactMiddleName",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "MiddleName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetPrimaryNames"
+        },
+        {
+            "attributeName": "PrimaryContactLastName",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetPrimaryNames"
+        },
+        {
+            "attributeName": "PrimaryContactEmail",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "EmailAddress"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetPrimaryNames"
+        },
+        {
+            "attributeName": "PrimaryContactWorkPhone",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "WorkPhone"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetPrimaryNames"
+        },
+        {
+            "attributeName": "PrimaryContactHomePhone",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "HomePhone"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetPrimaryNames"
+        },
+        {
+            "attributeName": "PrimaryContactCity",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "City"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetPrimaryNames"
+        },
+        {
+            "attributeName": "PrimaryContactState",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "ProvinceState"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetPrimaryNames"
+        },
+        {
+            "attributeName": "PrimaryContactZipcode",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "PostalCode"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetPrimaryNames"
+        },
+        {
+            "attributeName": "PrimaryContactCountryCode",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "CountryCode"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetPrimaryNames"
+        },
+        {
+            "attributeName": "PrimaryContactCustomerNumber",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "CustomerNumber"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetPrimaryNames"
+        },
+        {
+            "attributeName": "AdditionalContactFirstName",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "FirstName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetAdditionalNames"
+        },
+        {
+            "attributeName": "AdditionalContactMiddleName",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "MiddleName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetAdditionalNames"
+        },
+        {
+            "attributeName": "AdditionalContactLastName",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "LastName"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetAdditionalNames"
+        },
+        {
+            "attributeName": "AdditionalContactEmail",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "EmailAddress"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetAdditionalNames"
+        },
+        {
+            "attributeName": "AdditionalContactWorkPhone",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "WorkPhone"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetAdditionalNames"
+        },
+        {
+            "attributeName": "AdditionalContactHomePhone",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "HomePhone"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetAdditionalNames"
+        },
+        {
+            "attributeName": "AdditionalContactCity",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "City"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetAdditionalNames"
+        },
+        {
+            "attributeName": "AdditionalContactState",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "ProvinceState"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetAdditionalNames"
+        },
+        {
+            "attributeName": "AdditionalContactZipcode",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "PostalCode"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetAdditionalNames"
+        },
+        {
+            "attributeName": "AdditionalContactCountryCode",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "CountryCode"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetAdditionalNames"
+        },
+        {
+            "attributeName": "AdditionalContactCustomerNumber",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "CustomerNumber"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetAdditionalNames"
+        },
+        {
+            "attributeName": "PrimaryContactStreetAddress",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine1"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine2"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine3"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetPrimaryContactStreetAddress"
+        },
+        {
+            "attributeName": "AdditionalContactStreetAddress",
+            "sourceColumns": [
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine1"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine2"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "AddressLine3"
+                },
+                {
+                    "entityName": "all_bookingpassenger",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "BookingID"
+                },
+                {
+                    "entityName": "all_bookingcontact",
+                    "columnName": "TypeCode"
+                }
+            ],
+            "transformationFunction": "GetAdditionalContactStreetAddress"
+        },
+        {
+            "attributeName": "IsCsp",
+            "sourceColumns": [
+                {
+                    "entityName": "all_booking",
+                    "columnName": "Status"
+                },
+                {
+                    "entityName": "all_payment",
+                    "columnName": "AuthorizationStatus"
+                },
+                {
+                    "entityName": "all_payment",
+                    "columnName": "AccountNumber"
+                },
+                {
+                    "entityName": "all_voucher",
+                    "columnName": "VoucherReference"
+                },
+                {
+                    "entityName": "all_voucher",
+                    "columnName": "Amount"
+                },
+                {
+                    "entityName": "all_voucher",
+                    "columnName": "Available"
+                },
+                {
+                    "entityName": "all_voucher",
+                    "columnName": "VoucherBasisCode"
+                },
+                {
+                    "entityName": "all_voucher",
+                    "columnName": "Status"
+                },
+                {
+                    "entityName": "all_voucher",
+                    "columnName": "RecordLocator"
+                },
+                {
+                    "entityName": "all_booking",
+                    "columnName": "RecordLocator"
+                }
+                
+            ],
+            "transformationFunction": "GetIsCsp"
+        },
+        {
+            "attributeName": "TotalRevenue",
+            "sourceColumns": [
+                {
+                    "entityName": "all_currencyconversionhistory",
+                    "columnName": "FromCurrencyCode"
+                },
+                {
+                    "entityName": "all_currencyconversionhistory",
+                    "columnName": "VersionStartUTC"
+                },
+                {
+                    "entityName": "all_currencyconversionhistory",
+                    "columnName": "VersionEndUTC"
+                },
+                {
+                    "entityName": "all_currencyconversionhistory",
+                    "columnName": "ConversionRate"
+                },
+                {
+                    "entityName": "all_currencyconversionhistory",
+                    "columnName": "ToCurrencyCode"
+                }
+            ],
+            "transformationFunction": "GetTotalRevenue"
+        },
+        {
+            "attributeName": "BoardStatus",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengerjourneyleg",
+                    "columnName": "LiftStatus"
+                }   
+                
+            ],
+            "transformationFunction": "GetBoardStatus"
+        },
+        {
+            "attributeName": "WithPromo",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "ClassOfService"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "FareBasis"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "DepartureDate"
+                }
+
+            ],
+            "transformationFunction": "GetWithPromo"
+        },
+        {
+            "attributeName": "tvouchfim",
+            "sourceColumns": [
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "ClassOfService"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "FareBasis"
+                },
+                {
+                    "entityName": "all_passengerjourneysegment",
+                    "columnName": "DepartureDate"
+                }
+
+            ],
+            "transformationFunction": "Gettvouchfim"
+        }
+    ],
+    "storageDetails": [
+        {
+            "recordType": "valid-records",
+            "dataFormat": "parquet",
+            "fileSystem": "s3",
+            "pathUrl": "s3a://cebu-cdp-data-qa/profiles",
+            "storageHandler": "PersistHadoopFS"
+        },
+        {
+            "recordType": "dedupe",
+            "dataFormat": "parquet",
+            "fileSystem": "s3",
+            "pathUrl": "s3a://cebu-cdp-data-qa/dedupe",
+            "storageHandler": "PersistHadoopFS"
+        },
+        {
+            "recordType": "ucp",
+            "dataFormat": "parquet",
+            "fileSystem": "s3",
+            "pathUrl": "s3a://cebu-cdp-data-qa/ucp",
+            "storageHandler": "PersistHadoopFS"
+        },
+        {
+            "recordType": "ui",
+            "dataFormat": "parquet",
+            "fileSystem": "s3",
+            "pathUrl": "s3a://cebu-cdp-data-qa/ui",
+            "storageHandler": "PersistHadoopFS"
+        },
+        {
+            "recordType": "ignored_profiles",
+            "dataFormat": "parquet",
+            "fileSystem": "s3",
+            "pathUrl": "s3a://cebu-cdp-data-qa/ignored_profiles/archieve_data/",
+            "storageHandler": "PersistHadoopFS"
+        },
+        {
+            "recordType": "new_passengers",
+            "dataFormat": "parquet",
+            "fileSystem": "s3",
+            "pathUrl": "s3a://cebu-cdp-data-qa/new_passengers/",
+            "storageHandler": "PersistHadoopFS"
+        }
+    ],
+    "ciamPath": "s3a://edw-dl-process-data-qa/data/ciam/hdata/ciam_all_diffen_open/ciam_all_edwcustomer",
+    "voucherPath":"s3a://edw-dl-process-data-qa/data/odstest/hdata/odstest_all_diffen_open/odstest_all_voucher"
+}
+
+
