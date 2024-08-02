@@ -119,9 +119,10 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
     num_rows_dedupe = df_dedupe.count()
     
 
-    df_profile = spark.sql("select a.*,b.passenger_hash from profile as a left join dedupe as b on a.ProvisionalPrimaryKey = b.ProvisionalPrimaryKey")
+    df_profile = spark.sql("select a.*,b.passenger_hash from profile as a left join dedupe as b on a.PassengerID = b.PassengerID")
     num_null_hash_count = df_profile.where('passenger_hash is null').count()
     LOGGER.info("ccai -> null hash count : " + str(num_null_hash_count))
+    df_profile.write.parquet(ucp_path, mode="overwrite")
     # df_profile = df_profile.withColumn("passenger_hash", F.max("passenger_hash").over(W().partitionBy("FirstName","LastName","DateOfBirth")))
     # df_profile = df_profile.withColumn("passenger_hash", F.when(F.col("passenger_hash").isNull(), generate_random_string()).otherwise(F.col("passenger_hash")))
 
@@ -134,130 +135,130 @@ def compute_ucp(config_path, profile_path, dedupe_path, ucp_path, spark,day0_dat
     # ##change 2##
     # df_profile = df_profile.drop("mfirstname", "mlastname")
 
-    firstname_filters = [
-        "tba",
-        "adt1",
-        "adt2",
-        "pax",
-        "fname",
-        "first",
-        "xxx",
-        "firstname",
-        "api",
-        "anonymous",
-        "xxx",
-        "cebitcc",
-        "ntba",
-        "test",
-        "itcc",
-        "sherwin",
-        "unknown",
-        "ccainull"
-    ]
-    lastname_filters = [
-        "tbaa",
-        "last",
-        "aaa",
-        "adt1",
-        "adt2",
-        "bcs",
-        "pax",
-        "tba",
-        "lname",
-        "xxx",
-        "andrada",
-        "commandcenter",
-        "ceb",
-        "lastname",
-        "unknown",
-        "ccainull"
-    ]
+    # firstname_filters = [
+    #     "tba",
+    #     "adt1",
+    #     "adt2",
+    #     "pax",
+    #     "fname",
+    #     "first",
+    #     "xxx",
+    #     "firstname",
+    #     "api",
+    #     "anonymous",
+    #     "xxx",
+    #     "cebitcc",
+    #     "ntba",
+    #     "test",
+    #     "itcc",
+    #     "sherwin",
+    #     "unknown",
+    #     "ccainull"
+    # ]
+    # lastname_filters = [
+    #     "tbaa",
+    #     "last",
+    #     "aaa",
+    #     "adt1",
+    #     "adt2",
+    #     "bcs",
+    #     "pax",
+    #     "tba",
+    #     "lname",
+    #     "xxx",
+    #     "andrada",
+    #     "commandcenter",
+    #     "ceb",
+    #     "lastname",
+    #     "unknown",
+    #     "ccainull"
+    # ]
 
-    sm = SpanishMetaphone()
-    phonetic_encode_udf = F.udf(lambda x: phonetic_encode(sm, x), T.StringType())
+    # sm = SpanishMetaphone()
+    # phonetic_encode_udf = F.udf(lambda x: phonetic_encode(sm, x), T.StringType())
 
-    if incremental == "False" or incremental == False:
+    # if incremental == "False" or incremental == False:
 
-        df_profile.write.parquet(ucp_path, mode="overwrite")
+    #     df_profile.write.parquet(ucp_path, mode="overwrite")
 
-        df_profile_out = spark.read.parquet(ucp_path)
-        df_profile_out.cache()
-        LOGGER.info("ccai -> Num Rows Dedupe : " + str(num_rows_dedupe))
-        LOGGER.info("ccai -> Num Rows Input : " + str(num_rows_in))
-        LOGGER.info("ccai -> Num Rows Output : " + str(df_profile_out.count()))
-        LOGGER.info("ccai -> Num fn, ln, dob Combinations : " + str(df_profile_out.select("FirstName","LastName","DateOfBirth").dropDuplicates().count()))
-        LOGGER.info("ccai -> Num Passenger Hash : " + str( df_profile_out.select("passenger_hash").dropDuplicates().count()))
-        LOGGER.info("ccai -> Num Rows Without Hash : " + str(df_profile_out.filter("passenger_hash is null").count()))
-        ambiguous_hash = df_profile_out.groupBy("FirstName","LastName","DateOfBirth").agg(F.countDistinct("passenger_hash").alias("numHash")).filter("numHash>1")
-        ambiguous_hash.cache()
-        LOGGER.info("ccai -> Num Ambiguous Hashes : " + str(ambiguous_hash.count()))
-        LOGGER.info("ccai -> Ambiguous Hash Samples : \n" + str( ambiguous_hash.orderBy(F.desc("numHash")).limit(10).toPandas().to_csv(index=False)))
-        LOGGER.info("ccai -> ucp done")
+    #     df_profile_out = spark.read.parquet(ucp_path)
+    #     df_profile_out.cache()
+    #     LOGGER.info("ccai -> Num Rows Dedupe : " + str(num_rows_dedupe))
+    #     LOGGER.info("ccai -> Num Rows Input : " + str(num_rows_in))
+    #     LOGGER.info("ccai -> Num Rows Output : " + str(df_profile_out.count()))
+    #     LOGGER.info("ccai -> Num fn, ln, dob Combinations : " + str(df_profile_out.select("FirstName","LastName","DateOfBirth").dropDuplicates().count()))
+    #     LOGGER.info("ccai -> Num Passenger Hash : " + str( df_profile_out.select("passenger_hash").dropDuplicates().count()))
+    #     LOGGER.info("ccai -> Num Rows Without Hash : " + str(df_profile_out.filter("passenger_hash is null").count()))
+    #     ambiguous_hash = df_profile_out.groupBy("FirstName","LastName","DateOfBirth").agg(F.countDistinct("passenger_hash").alias("numHash")).filter("numHash>1")
+    #     ambiguous_hash.cache()
+    #     LOGGER.info("ccai -> Num Ambiguous Hashes : " + str(ambiguous_hash.count()))
+    #     LOGGER.info("ccai -> Ambiguous Hash Samples : \n" + str( ambiguous_hash.orderBy(F.desc("numHash")).limit(10).toPandas().to_csv(index=False)))
+    #     LOGGER.info("ccai -> ucp done")
 
 
-        # and (DateOfBirth>='1947')
-        new_passengers = df_profile_out.filter("(FirstName is not null) and (LastName is not null) and (DateOfBirth is not null)  and (DateOfBirth not like '%xxx%')")\
-                                       .select(F.lower(F.regexp_replace(unidecode_encode("FirstName"), "[^a-zA-Z0-9 ]", "")).alias("FirstName"),
-                                               F.lower(F.regexp_replace(unidecode_encode("LastName"), "[^a-zA-Z0-9 ]", "")).alias("LastName"),
-                                               F.col("DateOfBirth").alias("DateOfBirth"),
-                                               F.col("passenger_hash").alias("passenger_hash"))\
-                                       .filter("(FirstName not in ('{}')) and (LastName not in ('{}'))".format("','".join(firstname_filters), "','".join(lastname_filters)))\
-                                       .withColumn("pFirstName",F.trim(F.regexp_replace(F.regexp_replace(F.col("FirstName"), "\.", " "), "^(mr|ms|dr|rev|prof|sir|madam|miss|mrs|st)", "")))\
-                                       .withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"),F.lower("pFirstName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.split(F.col("pFirstName"), " ").getItem(0)))))) \
-                                       .withColumn("pLastName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("LastName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.col("LastName")))))) \
-                                       .select("pFirstName","pLastName","DateOfBirth","passenger_hash").dropDuplicates()
+    #     # and (DateOfBirth>='1947')
+    #     new_passengers = df_profile_out.filter("(FirstName is not null) and (LastName is not null) and (DateOfBirth is not null)  and (DateOfBirth not like '%xxx%')")\
+    #                                    .select(F.lower(F.regexp_replace(unidecode_encode("FirstName"), "[^a-zA-Z0-9 ]", "")).alias("FirstName"),
+    #                                            F.lower(F.regexp_replace(unidecode_encode("LastName"), "[^a-zA-Z0-9 ]", "")).alias("LastName"),
+    #                                            F.col("DateOfBirth").alias("DateOfBirth"),
+    #                                            F.col("passenger_hash").alias("passenger_hash"))\
+    #                                    .filter("(FirstName not in ('{}')) and (LastName not in ('{}'))".format("','".join(firstname_filters), "','".join(lastname_filters)))\
+    #                                    .withColumn("pFirstName",F.trim(F.regexp_replace(F.regexp_replace(F.col("FirstName"), "\.", " "), "^(mr|ms|dr|rev|prof|sir|madam|miss|mrs|st)", "")))\
+    #                                    .withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"),F.lower("pFirstName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.split(F.col("pFirstName"), " ").getItem(0)))))) \
+    #                                    .withColumn("pLastName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("LastName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.col("LastName")))))) \
+    #                                    .select("pFirstName","pLastName","DateOfBirth","passenger_hash").dropDuplicates()
         
-        #.withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("pFirstName")).otherwise(F.trim(F.split(phonetic_encode_udf(F.lower("pFirstName")), " ").getItem(0))))
+    #     #.withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("pFirstName")).otherwise(F.trim(F.split(phonetic_encode_udf(F.lower("pFirstName")), " ").getItem(0))))
 
 
-        new_passengers.write.parquet(new_passengers_base_path+"/p_date={}".format(partition_date), mode='overwrite')
+    #     new_passengers.write.parquet(new_passengers_base_path+"/p_date={}".format(partition_date), mode='overwrite')
 
-    else:
-        LOGGER.info("ccai -> ucp incremental started")
-        df_profile.cache()
-        # and (DateOfBirth>='1947') 
-        profile_count_init = df_profile.count()
-        observed_passengers = df_profile.filter("(FirstName is not null) and (LastName is not null) and (DateOfBirth is not null) and (DateOfBirth not like '%xxx%')")\
-                                       .select(F.lower(F.regexp_replace(unidecode_encode("FirstName"), "[^a-zA-Z0-9 ]", "")).alias("FirstName"),
-                                               F.lower(F.regexp_replace(unidecode_encode("LastName"), "[^a-zA-Z0-9 ]", "")).alias("LastName"),
-                                               F.col("DateOfBirth").alias("DateOfBirth"),
-                                               F.col("passenger_hash").alias("passenger_hash"),
-                                               F.col("ProvisionalPrimaryKey").alias("ProvisionalPrimaryKey"))\
-                                       .filter("(FirstName not in ('{}')) and (LastName not in ('{}'))".format("','".join(firstname_filters), "','".join(lastname_filters)))\
-                                       .withColumn("pFirstName",F.trim(F.regexp_replace(F.regexp_replace(F.col("FirstName"), "\.", " "), "^(mr|ms|dr|rev|prof|sir|madam|miss|mrs|st)", "")))\
-                                       .withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"),F.lower("pFirstName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.split(F.col("pFirstName"), " ").getItem(0))))))\
-                                       .withColumn("pLastName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("LastName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.col("LastName")))))) \
-                                       .select("ProvisionalPrimaryKey","pFirstName","pLastName","DateOfBirth","passenger_hash")#.dropDuplicates()
-        observed_passengers.cache()
-        old_passengers = spark.read.option("basePath",new_passengers_base_path).parquet(*get_old_passengers_paths(new_passengers_base_path,day0_date,end_date)).drop("p_date").withColumnRenamed("DateOfBirth","DateOfBirth_r").withColumnRenamed("passenger_hash","passenger_hash_r")
+    # else:
+    #     LOGGER.info("ccai -> ucp incremental started")
+    #     df_profile.cache()
+    #     # and (DateOfBirth>='1947') 
+    #     profile_count_init = df_profile.count()
+    #     observed_passengers = df_profile.filter("(FirstName is not null) and (LastName is not null) and (DateOfBirth is not null) and (DateOfBirth not like '%xxx%')")\
+    #                                    .select(F.lower(F.regexp_replace(unidecode_encode("FirstName"), "[^a-zA-Z0-9 ]", "")).alias("FirstName"),
+    #                                            F.lower(F.regexp_replace(unidecode_encode("LastName"), "[^a-zA-Z0-9 ]", "")).alias("LastName"),
+    #                                            F.col("DateOfBirth").alias("DateOfBirth"),
+    #                                            F.col("passenger_hash").alias("passenger_hash"),
+    #                                            F.col("ProvisionalPrimaryKey").alias("ProvisionalPrimaryKey"))\
+    #                                    .filter("(FirstName not in ('{}')) and (LastName not in ('{}'))".format("','".join(firstname_filters), "','".join(lastname_filters)))\
+    #                                    .withColumn("pFirstName",F.trim(F.regexp_replace(F.regexp_replace(F.col("FirstName"), "\.", " "), "^(mr|ms|dr|rev|prof|sir|madam|miss|mrs|st)", "")))\
+    #                                    .withColumn("pFirstName", F.when(F.col("DateOfBirth").like("9999%"),F.lower("pFirstName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.split(F.col("pFirstName"), " ").getItem(0))))))\
+    #                                    .withColumn("pLastName", F.when(F.col("DateOfBirth").like("9999%"), F.lower("LastName")).otherwise(F.trim(F.lower(phonetic_encode_udf(F.col("LastName")))))) \
+    #                                    .select("ProvisionalPrimaryKey","pFirstName","pLastName","DateOfBirth","passenger_hash")#.dropDuplicates()
+    #     observed_passengers.cache()
+    #     old_passengers = spark.read.option("basePath",new_passengers_base_path).parquet(*get_old_passengers_paths(new_passengers_base_path,day0_date,end_date)).drop("p_date").withColumnRenamed("DateOfBirth","DateOfBirth_r").withColumnRenamed("passenger_hash","passenger_hash_r")
 
-        retained_passengers = old_passengers.join(observed_passengers, ["pFirstName","pLastName"])\
-                                            .withColumn("dateSim", get_date_similarity(F.col("DateOfBirth"), F.col("DateOfBirth_r")))\
-                                            .filter("dateSim").drop("dateSim")
-        retained_passengers.cache()
+    #     retained_passengers = old_passengers.join(observed_passengers, ["pFirstName","pLastName"])\
+    #                                         .withColumn("dateSim", get_date_similarity(F.col("DateOfBirth"), F.col("DateOfBirth_r")))\
+    #                                         .filter("dateSim").drop("dateSim")
+    #     retained_passengers.cache()
         
-        passenger_hash_overrides = retained_passengers.select("passenger_hash","passenger_hash_r").groupBy("passenger_hash").agg(F.max("passenger_hash_r").alias("passenger_hash_r"))#.dropDuplicates()#.cache()
-        passenger_hash_overrides.cache()
+    #     passenger_hash_overrides = retained_passengers.select("passenger_hash","passenger_hash_r").groupBy("passenger_hash").agg(F.max("passenger_hash_r").alias("passenger_hash_r"))#.dropDuplicates()#.cache()
+    #     passenger_hash_overrides.cache()
         
-        new_passengers = observed_passengers.join(retained_passengers, "ProvisionalPrimaryKey", "left_anti").drop("ProvisionalPrimaryKey").dropDuplicates()
-        new_passengers.cache()
-        LOGGER.info("ccai -> Num New Passengers Rows/Records : "+ str(new_passengers.count()))
-        df_profile.join(passenger_hash_overrides, ["passenger_hash"], "left").withColumn("passenger_hash", F.coalesce("passenger_hash_r","passenger_hash")).drop("passenger_hash_r").write.parquet(ucp_path, mode="overwrite")
-        new_passengers.write.parquet(new_passengers_base_path+"/p_date={}".format(partition_date), mode='overwrite')
+    #     new_passengers = observed_passengers.join(retained_passengers, "ProvisionalPrimaryKey", "left_anti").drop("ProvisionalPrimaryKey").dropDuplicates()
+    #     new_passengers.cache()
+    #     LOGGER.info("ccai -> Num New Passengers Rows/Records : "+ str(new_passengers.count()))
+    #     df_profile.join(passenger_hash_overrides, ["passenger_hash"], "left").withColumn("passenger_hash", F.coalesce("passenger_hash_r","passenger_hash")).drop("passenger_hash_r").write.parquet(ucp_path, mode="overwrite")
+    #     new_passengers.write.parquet(new_passengers_base_path+"/p_date={}".format(partition_date), mode='overwrite')
 
-        df_profile_out = spark.read.parquet(ucp_path)
-        df_profile_out.cache()
-        LOGGER.info("ccai -> Num Rows Dedupe : " + str(num_rows_dedupe))
-        LOGGER.info("ccai -> Num Rows Input : " + str(num_rows_in))
-        LOGGER.info("ccai -> Num Rows Output : " + str(df_profile_out.count()))
-        LOGGER.info("ccai -> Num fn, ln, dob Combinations : " + str(df_profile_out.select("FirstName","LastName","DateOfBirth").dropDuplicates().count()))
-        LOGGER.info("ccai -> Num Passenger Hash : " + str( df_profile_out.select("passenger_hash").dropDuplicates().count()))
-        LOGGER.info("ccai -> Num Rows Without Hash : " + str(df_profile_out.filter("passenger_hash is null").count()))
-        ambiguous_hash = df_profile_out.groupBy("FirstName","LastName","DateOfBirth").agg(F.countDistinct("passenger_hash").alias("numHash")).filter("numHash>1")
-        ambiguous_hash.cache()
-        LOGGER.info("ccai -> Num Ambiguous Hashes : " + str(ambiguous_hash.count()))
-        LOGGER.info("ccai -> Ambiguous Hash Samples : \n" + str( ambiguous_hash.orderBy(F.desc("numHash")).limit(10).toPandas().to_csv(index=False)))
-        LOGGER.info("ccai -> ucp done")
+    #     df_profile_out = spark.read.parquet(ucp_path)
+    #     df_profile_out.cache()
+    #     LOGGER.info("ccai -> Num Rows Dedupe : " + str(num_rows_dedupe))
+    #     LOGGER.info("ccai -> Num Rows Input : " + str(num_rows_in))
+    #     LOGGER.info("ccai -> Num Rows Output : " + str(df_profile_out.count()))
+    #     LOGGER.info("ccai -> Num fn, ln, dob Combinations : " + str(df_profile_out.select("FirstName","LastName","DateOfBirth").dropDuplicates().count()))
+    #     LOGGER.info("ccai -> Num Passenger Hash : " + str( df_profile_out.select("passenger_hash").dropDuplicates().count()))
+    #     LOGGER.info("ccai -> Num Rows Without Hash : " + str(df_profile_out.filter("passenger_hash is null").count()))
+    #     ambiguous_hash = df_profile_out.groupBy("FirstName","LastName","DateOfBirth").agg(F.countDistinct("passenger_hash").alias("numHash")).filter("numHash>1")
+    #     ambiguous_hash.cache()
+    #     LOGGER.info("ccai -> Num Ambiguous Hashes : " + str(ambiguous_hash.count()))
+    #     LOGGER.info("ccai -> Ambiguous Hash Samples : \n" + str( ambiguous_hash.orderBy(F.desc("numHash")).limit(10).toPandas().to_csv(index=False)))
+    #     LOGGER.info("ccai -> ucp done")
 
 
     return ucp_path
