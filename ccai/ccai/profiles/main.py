@@ -106,6 +106,7 @@ def list_folders_in_path(bucket_name, prefix,LOGGER,start_date,end_date):
     available_folders = [common_prefix.get('Prefix', '').rstrip('/') for common_prefix in response.get('CommonPrefixes', [])]
     available_partitions = [partition.split("=")[1] for partition in available_folders if available_folders]
     available_partitions = [date for date in available_partitions if start_date <= date <= end_date]
+    LOGGER.info(f"ccai available_partitions : {str(available_partitions)}")
     return available_partitions
 
 
@@ -116,7 +117,8 @@ def get_latest_partition(bucket_name, prefix,LOGGER,start_date):
     response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix, Delimiter='/')
     available_folders = [common_prefix.get('Prefix', '').rstrip('/') for common_prefix in response.get('CommonPrefixes', [])]
     available_partitions = [partition.split("=")[1] for partition in available_folders if available_folders]
-    available_partitions = [date for date in available_partitions if date <= start_date ]
+    # available_partitions = [date for date in available_partitions if date <= start_date ]
+    available_partitions = [date for date in available_partitions]
     available_partitions.sort(reverse=True)
     dummy_list = []
     dummy_list.append(available_partitions[0])
@@ -271,10 +273,13 @@ def load_data_incremental(config,spark,LOGGER,start_date,end_date):
 
 
             #get available non open partitions
-            path = each_source['pathUrl'].replace("odstest_all_diffen_open","odstest_all_storage")
+            if each_source['entityName'] == "all_currencyconversionhistory":
+                path = each_source['pathUrl'].replace("diffen_open","storage")
+            else:
+                path = each_source['pathUrl'].replace("diffen_open","storage")
             resource_name = each_source['entityName']
             exe = "/vds="
-
+            LOGGER.info(f"ccai path - {path}")
             bucket,prefix = get_bucket(path,resource_name)
             available_partitions = list_folders_in_path(bucket, prefix,LOGGER,start_date,end_date)
 
@@ -1294,7 +1299,7 @@ def load_ciam(config,spark, partition_date,LOGGER,start_date,end_date,incrementa
 
     else:
         format = "avro"
-        path = config['ciamPath'].replace("all_diffen_open","all_storage")
+        path = config['ciamPath'].replace("diffen_open","storage")
         resource_name = "all_edwcustomer"
         exe = "/vds="
 
